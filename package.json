@@ -1,0 +1,11 @@
+{
+  "name": "irife-platform",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/mobile"
+  ],
+  "scripts": {
+    "build": "npm run typecheck --workspace=@irife/mobile"
+  }
+}
