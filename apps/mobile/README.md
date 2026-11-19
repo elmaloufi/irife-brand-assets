@@ -10,7 +10,7 @@ No sample providers, ratings, prices, or availability are presented as real data
 
 ## Requirements
 
-- Node.js compatible with the selected Expo SDK (Node 20.19+; use the current supported LTS release).
+- Node.js compatible with Expo SDK 57 (Node 22.13+; use the current supported LTS release).
 - npm.
 - Expo Go on a physical Android device for the initial device preview.
 
