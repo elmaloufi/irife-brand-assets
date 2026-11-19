@@ -320,8 +320,8 @@ The following paths were checked on `feat/irife-mobile-platform-foundation`:
 - `README.md` describes the repository as official IRIFE brand assets, SVG logos, visual identity, design resources, and digital branding components.
 - `docs/engineering/FOUNDATION.md` exists and records the approved Expo/PostgreSQL/Docker/payment/deployment decisions.
 - `package.json`, `apps/mobile/package.json`, `app.json`, `docker-compose.yml`, `pnpm-workspace.yaml`, and the proposed architecture document did not exist at the time of this audit.
-- `.github/workflows/blank.yml` is named “IRIFE CI” and runs `npm ci`, lint, tests, and build, but the inspected branch has no root `package.json` or lockfile. This workflow must be reconciled with the actual app workspace before relying on it as a passing gate.
-- `.github/workflows/nextjs.yml` contains a GitHub Pages deployment job triggered by pushes to `main`. It is not part of the mobile foundation plan. Review its repository Pages configuration and deployment intent before any future change to `main`; do not trigger production deployment as part of this work.
+- `.github/workflows/blank.yml` has been updated on this branch to install the npm workspace and run the mobile TypeScript build. It currently uses `npm install` because no lockfile could be generated in the current remote editing environment; commit a verified `package-lock.json` and switch CI to `npm ci` before treating dependency installation as fully reproducible.
+- The original `.github/workflows/nextjs.yml` contained an automatic GitHub Pages deployment on pushes to `main`. On this feature branch it has been replaced with a manually-triggered no-op deployment gate, preventing automatic Pages deployment when this branch is eventually merged. No deployment was run.
 - CodeQL is configured for GitHub Actions analysis. Its language coverage should be revisited when TypeScript application code is introduced.
 
 This is a targeted path audit, not a complete recursive inventory of every repository file.
