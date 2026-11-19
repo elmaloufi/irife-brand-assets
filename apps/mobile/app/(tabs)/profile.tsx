@@ -13,7 +13,7 @@ function AccountRow({
   icon: React.ComponentProps<typeof Ionicons>["name"];
   title: string;
   description: string;
-  href: "/requests" | "/settings";
+  href: "/requests" | "/settings" | "/saved";
 }) {
   return (
     <Link href={href} asChild>
@@ -65,6 +65,13 @@ export default function ProfileScreen() {
             title="My requests"
             description="Review your experience enquiries"
             href="/requests"
+          />
+          <View style={styles.rowDivider} />
+          <AccountRow
+            icon="bookmark-outline"
+            title="Saved places & trips"
+            description="Your personal travel collection"
+            href="/saved"
           />
         </View>
       </View>
@@ -222,5 +229,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 16,
   },
+  rowDivider: { height: 1, marginLeft: 68, backgroundColor: theme.colors.border },
   pressed: { opacity: 0.75 },
 });
