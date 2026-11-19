@@ -62,7 +62,7 @@ export default function GuideScreen() {
               style={({ pressed }) => [styles.suggestion, pressed && styles.pressed]}
             >
               <Text style={styles.suggestionText}>{suggestion}</Text>
-              <Ionicons name="arrow-up-right" size={16} color={theme.colors.primary} />
+              <Ionicons name="arrow-up-right-box" size={16} color={theme.colors.primary} />
             </Pressable>
           ))}
         </View>
