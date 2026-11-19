@@ -108,7 +108,7 @@ export default function HomeScreen() {
                 <Ionicons name={interest.icon} size={23} color={theme.colors.primaryDark} />
               </View>
               <Text style={styles.interestTitle}>{interest.title}</Text>
-              <Ionicons name="arrow-up-right" size={15} color={theme.colors.primaryDark} />
+              <Ionicons name="arrow-up-right-box" size={15} color={theme.colors.primaryDark} />
             </Pressable>
           ))}
         </View>
