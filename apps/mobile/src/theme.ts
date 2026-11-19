@@ -6,7 +6,7 @@ export const theme = {
     softMint: "#E2EFE8",
     sand: "#E8D7BD",
     ink: "#213531",
-    secondary: "#657670",
+    secondary: "#5E7069",
     primary: "#177767",
     primaryDark: "#143E37",
     forest: "#143E37",
