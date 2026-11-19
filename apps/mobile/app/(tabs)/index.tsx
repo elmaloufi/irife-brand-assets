@@ -21,6 +21,7 @@ export default function HomeScreen() {
         <View style={styles.brand}>
           <View style={styles.brandMark}>
             <Text style={styles.brandMarkText}>i</Text>
+            <View style={styles.brandSpark} />
           </View>
           <View>
             <Text style={styles.brandName}>IRIFE</Text>
@@ -31,14 +32,17 @@ export default function HomeScreen() {
           accessibilityRole="button"
           accessibilityLabel="Open account settings"
           onPress={() => router.push("/settings")}
-          style={styles.settingsButton}
+          style={({ pressed }) => [styles.settingsButton, pressed && styles.pressed]}
         >
           <Ionicons name="settings-outline" size={20} color={theme.colors.primaryDark} />
         </Pressable>
       </View>
 
       <View style={styles.intro}>
-        <Text style={styles.eyebrow}>YOUR NEXT STORY STARTS HERE</Text>
+        <View style={styles.welcomeLine}>
+          <View style={styles.welcomeDot} />
+          <Text style={styles.eyebrow}>YOUR NEXT STORY STARTS HERE</Text>
+        </View>
         <Text style={styles.title}>Find your kind of Morocco.</Text>
         <Text style={styles.subtitle}>
           Discover places, people and experiences that make every journey yours.
@@ -53,12 +57,21 @@ export default function HomeScreen() {
       >
         <Ionicons name="search-outline" size={20} color={theme.colors.primary} />
         <Text style={styles.searchText}>Where would you like to explore?</Text>
-        <Ionicons name="arrow-forward" size={17} color={theme.colors.secondary} />
+        <View style={styles.searchAction}>
+          <Ionicons name="arrow-forward" size={16} color={theme.colors.white} />
+        </View>
       </Pressable>
 
       <View style={styles.hero}>
         <View style={styles.heroOrb} />
         <View style={styles.heroOrbSmall} />
+        <View pointerEvents="none" style={styles.heroMosaic}>
+          <View style={styles.mosaicDiamond} />
+          <View style={[styles.mosaicDiamond, styles.mosaicDiamondOffset]} />
+          <View style={styles.mosaicDiamond} />
+          <View style={[styles.mosaicDiamond, styles.mosaicDiamondOffset]} />
+          <View style={styles.mosaicDiamond} />
+        </View>
         <View style={styles.heroContent}>
           <View style={styles.heroTag}>
             <Ionicons name="sparkles" size={13} color={theme.colors.primaryDark} />
@@ -108,7 +121,9 @@ export default function HomeScreen() {
                 <Ionicons name={interest.icon} size={23} color={theme.colors.primaryDark} />
               </View>
               <Text style={styles.interestTitle}>{interest.title}</Text>
-              <Ionicons name="arrow-up-right-box" size={15} color={theme.colors.primaryDark} />
+              <View style={styles.interestArrow}>
+                <Ionicons name="arrow-up-right" size={14} color={theme.colors.primaryDark} />
+              </View>
             </Pressable>
           ))}
         </View>
@@ -116,6 +131,7 @@ export default function HomeScreen() {
 
       <Pressable
         accessibilityRole="button"
+        accessibilityLabel="Open the Smart Map"
         onPress={() => router.push("/(tabs)/map")}
         style={({ pressed }) => [styles.mapCard, pressed && styles.pressed]}
       >
@@ -127,7 +143,9 @@ export default function HomeScreen() {
           <Text style={styles.mapCardTitle}>See your next adventure on the map</Text>
           <Text style={styles.mapCardDescription}>Explore places and plan a route in one place.</Text>
         </View>
-        <Ionicons name="chevron-forward" size={18} color={theme.colors.primary} />
+        <View style={styles.mapCardArrow}>
+          <Ionicons name="chevron-forward" size={18} color={theme.colors.primary} />
+        </View>
       </Pressable>
 
       <Text style={styles.footer}>A more thoughtful way to discover Morocco.</Text>
@@ -143,11 +161,13 @@ const styles = StyleSheet.create({
   },
   brand: { flexDirection: "row", alignItems: "center", gap: 10 },
   brandMark: {
-    width: 42,
-    height: 42,
+    width: 44,
+    height: 44,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 15,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(215,175,110,0.72)",
     backgroundColor: theme.colors.primaryDark,
   },
   brandMarkText: {
@@ -155,6 +175,15 @@ const styles = StyleSheet.create({
     fontSize: 27,
     lineHeight: 30,
     fontWeight: "900",
+  },
+  brandSpark: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: theme.colors.gold,
   },
   brandName: {
     color: theme.colors.ink,
@@ -170,16 +199,23 @@ const styles = StyleSheet.create({
     letterSpacing: 1.1,
   },
   settingsButton: {
-    width: 43,
-    height: 43,
+    width: 44,
+    height: 44,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 15,
+    borderRadius: 16,
+    backgroundColor: theme.colors.softMint,
     borderWidth: 1,
     borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
   },
   intro: { gap: 8, paddingTop: 5 },
+  welcomeLine: { flexDirection: "row", alignItems: "center", gap: 7 },
+  welcomeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: theme.colors.terracotta,
+  },
   eyebrow: {
     color: theme.colors.primary,
     fontSize: 10,
@@ -200,50 +236,83 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   search: {
-    minHeight: 56,
+    minHeight: 58,
     flexDirection: "row",
     alignItems: "center",
     gap: 11,
-    paddingHorizontal: 15,
+    paddingLeft: 15,
+    paddingRight: 8,
     borderWidth: 1,
     borderColor: theme.colors.border,
-    borderRadius: 17,
+    borderRadius: 18,
     backgroundColor: theme.colors.surface,
+    shadowColor: theme.colors.primaryDark,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 2,
   },
   searchText: { flex: 1, color: theme.colors.secondary, fontSize: 12 },
+  searchAction: {
+    width: 38,
+    height: 38,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 13,
+    backgroundColor: theme.colors.primary,
+  },
   hero: {
-    minHeight: 250,
+    minHeight: 264,
     overflow: "hidden",
     justifyContent: "center",
     padding: 21,
-    borderRadius: 25,
+    borderRadius: 27,
     backgroundColor: theme.colors.hero,
+    elevation: 3,
   },
   heroOrb: {
     position: "absolute",
-    width: 210,
-    height: 210,
-    top: -110,
-    right: -65,
+    width: 220,
+    height: 220,
+    top: -122,
+    right: -72,
     borderRadius: 110,
     backgroundColor: "#245B50",
   },
   heroOrbSmall: {
     position: "absolute",
-    width: 120,
-    height: 120,
-    right: 40,
-    bottom: -78,
-    borderRadius: 60,
+    width: 126,
+    height: 126,
+    right: 35,
+    bottom: -84,
+    borderRadius: 63,
     backgroundColor: "#1C4941",
   },
+  heroMosaic: {
+    position: "absolute",
+    top: 32,
+    right: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    opacity: 0.72,
+  },
+  mosaicDiamond: {
+    width: 13,
+    height: 13,
+    borderWidth: 1,
+    borderColor: "rgba(230,197,143,0.7)",
+    borderRadius: 3,
+    transform: [{ rotate: "45deg" }],
+  },
+  mosaicDiamondOffset: { marginTop: 18 },
   heroContent: { alignItems: "flex-start", gap: 12 },
   heroTag: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
     paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingVertical: 7,
     borderRadius: theme.radius.pill,
     backgroundColor: theme.colors.heroAccent,
   },
@@ -262,7 +331,7 @@ const styles = StyleSheet.create({
   },
   heroDescription: {
     maxWidth: 290,
-    color: "#D8E7E1",
+    color: "#E0EAE5",
     fontSize: 12,
     lineHeight: 19,
   },
@@ -280,47 +349,70 @@ const styles = StyleSheet.create({
     letterSpacing: 1.1,
   },
   sectionTitle: { color: theme.colors.ink, fontSize: 20, fontWeight: "900" },
-  seeAll: { flexDirection: "row", alignItems: "center", gap: 5, paddingVertical: 5 },
+  seeAll: { flexDirection: "row", alignItems: "center", gap: 5, paddingVertical: 7 },
   seeAllText: { color: theme.colors.primary, fontSize: 10, fontWeight: "900" },
   interestGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   interestCard: {
     width: "48%",
-    minHeight: 112,
+    minHeight: 120,
     flexGrow: 1,
     flexShrink: 1,
     justifyContent: "space-between",
-    padding: 13,
-    borderRadius: 18,
+    padding: 14,
+    borderRadius: 21,
+    borderWidth: 1,
+    borderColor: "rgba(33,53,49,0.05)",
+    shadowColor: theme.colors.primaryDark,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.045,
+    shadowRadius: 8,
+    elevation: 1,
   },
   interestIcon: {
-    width: 39,
-    height: 39,
+    width: 41,
+    height: 41,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 13,
-    backgroundColor: "rgba(255,255,255,0.7)",
+    borderRadius: 14,
+    backgroundColor: "rgba(255,255,255,0.82)",
   },
   interestTitle: {
     color: theme.colors.ink,
     fontSize: 12,
     fontWeight: "900",
   },
+  interestArrow: {
+    position: "absolute",
+    right: 12,
+    bottom: 12,
+    width: 25,
+    height: 25,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 9,
+    backgroundColor: "rgba(255,255,255,0.68)",
+  },
   mapCard: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
     padding: 15,
-    borderRadius: 19,
+    borderRadius: 21,
     borderWidth: 1,
     borderColor: theme.colors.border,
     backgroundColor: theme.colors.surface,
+    shadowColor: theme.colors.primaryDark,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 2,
   },
   mapCardIcon: {
-    width: 45,
-    height: 45,
+    width: 46,
+    height: 46,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 14,
+    borderRadius: 15,
     backgroundColor: theme.colors.softMint,
   },
   mapCardCopy: { flex: 1, gap: 4 },
@@ -337,11 +429,19 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   mapCardDescription: { color: theme.colors.secondary, fontSize: 10 },
+  mapCardArrow: {
+    width: 30,
+    height: 30,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 10,
+    backgroundColor: theme.colors.surfaceMuted,
+  },
   footer: {
     color: theme.colors.secondary,
     fontSize: 10,
     textAlign: "center",
     paddingBottom: 4,
   },
-  pressed: { opacity: 0.78, transform: [{ scale: 0.99 }] },
+  pressed: { opacity: 0.78, transform: [{ scale: 0.985 }] },
 });
