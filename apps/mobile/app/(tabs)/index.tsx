@@ -122,7 +122,7 @@ export default function HomeScreen() {
               </View>
               <Text style={styles.interestTitle}>{interest.title}</Text>
               <View style={styles.interestArrow}>
-                <Ionicons name="arrow-up-right" size={14} color={theme.colors.primaryDark} />
+                <Ionicons name="arrow-forward" size={14} color={theme.colors.primaryDark} />
               </View>
             </Pressable>
           ))}
