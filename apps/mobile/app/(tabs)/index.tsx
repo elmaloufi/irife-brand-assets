@@ -1,46 +1,20 @@
-import type { ReactNode } from "react";
-import { Link } from "expo-router";
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  type StyleProp,
-  type ViewStyle,
-} from "react-native";
+import { Ionicons } from "@react-native-vector-icons/ionicons";
+import { useRouter } from "expo-router";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { AppButton } from "../../src/components/AppButton";
 import { ScreenContainer } from "../../src/components/ScreenContainer";
 import { theme } from "../../src/theme";
 
 const interests = [
-  { icon: "🌊", title: "Coast & ocean", description: "Beaches, sea air and slow days", tint: "#E5F1F2" },
-  { icon: "⛰️", title: "Mountains & nature", description: "Open landscapes and fresh air", tint: "#E9F0E7" },
-  { icon: "🏛️", title: "Culture & heritage", description: "Architecture, craft and history", tint: "#F4E9DC" },
-  { icon: "🍃", title: "Food & local life", description: "Flavours and everyday moments", tint: "#F0E9EF" },
+  { icon: "water-outline" as const, title: "Coast & ocean", tint: "#E2EFF0" },
+  { icon: "leaf-outline" as const, title: "Nature & trails", tint: "#E7EFE2" },
+  { icon: "business-outline" as const, title: "Culture & heritage", tint: "#F0E7D9" },
+  { icon: "restaurant-outline" as const, title: "Food & local life", tint: "#F2E8E5" },
 ];
 
-function DiscoverLink({
-  children,
-  label,
-  style,
-}: {
-  children: ReactNode;
-  label: string;
-  style?: StyleProp<ViewStyle>;
-}) {
-  return (
-    <Link href="/discover" asChild>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={label}
-        style={({ pressed }) => [style, pressed && styles.pressed]}
-      >
-        {children}
-      </Pressable>
-    </Link>
-  );
-}
-
 export default function HomeScreen() {
+  const router = useRouter();
+
   return (
     <ScreenContainer>
       <View style={styles.header}>
@@ -53,80 +27,110 @@ export default function HomeScreen() {
             <Text style={styles.brandCaption}>MADE FOR YOUR JOURNEY</Text>
           </View>
         </View>
-        <View style={styles.countryTag}>
-          <Text style={styles.countryTagText}>MOROCCO</Text>
-        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Open account settings"
+          onPress={() => router.push("/settings")}
+          style={styles.settingsButton}
+        >
+          <Ionicons name="settings-outline" size={20} color={theme.colors.primaryDark} />
+        </Pressable>
       </View>
 
       <View style={styles.intro}>
         <Text style={styles.eyebrow}>YOUR NEXT STORY STARTS HERE</Text>
         <Text style={styles.title}>Find your kind of Morocco.</Text>
         <Text style={styles.subtitle}>
-          Discover places, experiences and local moments worth travelling for.
+          Discover places, people and experiences that make every journey yours.
         </Text>
       </View>
 
-      <DiscoverLink label="Search destinations and experiences" style={styles.search}>
-        <Text style={styles.searchIcon}>⌕</Text>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Explore destinations on the Smart Map"
+        onPress={() => router.push("/(tabs)/map")}
+        style={({ pressed }) => [styles.search, pressed && styles.pressed]}
+      >
+        <Ionicons name="search-outline" size={20} color={theme.colors.primary} />
         <Text style={styles.searchText}>Where would you like to explore?</Text>
-        <Text style={styles.searchArrow}>›</Text>
-      </DiscoverLink>
+        <Ionicons name="arrow-forward" size={17} color={theme.colors.secondary} />
+      </Pressable>
 
       <View style={styles.hero}>
         <View style={styles.heroOrb} />
         <View style={styles.heroOrbSmall} />
         <View style={styles.heroContent}>
-          <Text style={styles.heroKicker}>TRAVEL AT YOUR OWN PACE</Text>
-          <Text style={styles.heroTitle}>A thousand ways to experience Morocco.</Text>
+          <View style={styles.heroTag}>
+            <Ionicons name="sparkles" size={13} color={theme.colors.primaryDark} />
+            <Text style={styles.heroTagText}>YOUR JOURNEY, YOUR WAY</Text>
+          </View>
+          <Text style={styles.heroTitle}>Let Morocco surprise you.</Text>
           <Text style={styles.heroDescription}>
-            Start with what you love. We’ll help you find where it leads.
+            Tell our travel guide what you love. Discover a journey shaped around you.
           </Text>
-          <DiscoverLink label="Explore destinations and experiences" style={styles.heroButton}>
-            <Text style={styles.heroButtonText}>Explore IRIFE</Text>
-            <Text style={styles.heroButtonArrow}>→</Text>
-          </DiscoverLink>
+          <AppButton
+            label="Meet your AI Guide"
+            icon="arrow-forward"
+            onPress={() => router.push("/(tabs)/guide")}
+          />
         </View>
       </View>
 
       <View style={styles.section}>
         <View style={styles.sectionHeading}>
-          <View>
-            <Text style={styles.sectionEyebrow}>FOLLOW YOUR CURIOSITY</Text>
+          <View style={styles.sectionHeadingCopy}>
+            <Text style={styles.sectionEyebrow}>START WITH WHAT YOU LOVE</Text>
             <Text style={styles.sectionTitle}>Explore by interest</Text>
           </View>
-          <DiscoverLink label="See all interests" style={styles.seeAll}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push("/(tabs)/discover")}
+            style={styles.seeAll}
+          >
             <Text style={styles.seeAllText}>See all</Text>
-            <Text style={styles.seeAllArrow}>→</Text>
-          </DiscoverLink>
+            <Ionicons name="arrow-forward" size={15} color={theme.colors.primary} />
+          </Pressable>
         </View>
 
         <View style={styles.interestGrid}>
           {interests.map((interest) => (
-            <DiscoverLink
+            <Pressable
               key={interest.title}
-              label={"Explore " + interest.title}
-              style={[styles.interestCard, { backgroundColor: interest.tint }]}
+              accessibilityRole="button"
+              onPress={() => router.push("/(tabs)/discover")}
+              style={({ pressed }) => [
+                styles.interestCard,
+                { backgroundColor: interest.tint },
+                pressed && styles.pressed,
+              ]}
             >
-              <Text style={styles.interestIcon}>{interest.icon}</Text>
+              <View style={styles.interestIcon}>
+                <Ionicons name={interest.icon} size={23} color={theme.colors.primaryDark} />
+              </View>
               <Text style={styles.interestTitle}>{interest.title}</Text>
-              <Text style={styles.interestDescription}>{interest.description}</Text>
-            </DiscoverLink>
+              <Ionicons name="arrow-up-right" size={15} color={theme.colors.primaryDark} />
+            </Pressable>
           ))}
         </View>
       </View>
 
-      <View style={styles.footerCard}>
-        <Text style={styles.footerEyebrow}>THE IRIFE WAY</Text>
-        <Text style={styles.footerTitle}>Discover first. Choose with confidence.</Text>
-        <Text style={styles.footerDescription}>
-          Explore the catalogue, learn about each experience, and send a clear
-          request when you find the right fit.
-        </Text>
-        <DiscoverLink label="Start discovering with IRIFE" style={styles.footerLink}>
-          <Text style={styles.footerLinkText}>Start discovering</Text>
-          <Text style={styles.footerLinkArrow}>→</Text>
-        </DiscoverLink>
-      </View>
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => router.push("/(tabs)/map")}
+        style={({ pressed }) => [styles.mapCard, pressed && styles.pressed]}
+      >
+        <View style={styles.mapCardIcon}>
+          <Ionicons name="map-outline" size={22} color={theme.colors.primaryDark} />
+        </View>
+        <View style={styles.mapCardCopy}>
+          <Text style={styles.mapCardEyebrow}>IRIFE SMART JOURNEY</Text>
+          <Text style={styles.mapCardTitle}>See your next adventure on the map</Text>
+          <Text style={styles.mapCardDescription}>Explore places and plan a route in one place.</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={theme.colors.primary} />
+      </Pressable>
+
+      <Text style={styles.footer}>A more thoughtful way to discover Morocco.</Text>
     </ScreenContainer>
   );
 }
@@ -137,24 +141,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  brand: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
+  brand: { flexDirection: "row", alignItems: "center", gap: 10 },
   brandMark: {
     width: 42,
     height: 42,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 14,
-    backgroundColor: theme.colors.primary,
+    borderRadius: 15,
+    backgroundColor: theme.colors.primaryDark,
   },
   brandMarkText: {
     color: theme.colors.white,
     fontSize: 27,
     lineHeight: 30,
-    fontWeight: "800",
+    fontWeight: "900",
   },
   brandName: {
     color: theme.colors.ink,
@@ -169,241 +169,179 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: 1.1,
   },
-  countryTag: {
-    paddingHorizontal: 11,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: "#EAF1EF",
+  settingsButton: {
+    width: 43,
+    height: 43,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
   },
-  countryTagText: {
-    color: theme.colors.primaryDark,
-    fontSize: 9,
-    fontWeight: "900",
-    letterSpacing: 1.2,
-  },
-  intro: {
-    gap: 9,
-    paddingTop: 8,
-  },
+  intro: { gap: 8, paddingTop: 5 },
   eyebrow: {
     color: theme.colors.primary,
     fontSize: 10,
     fontWeight: "900",
-    letterSpacing: 1.7,
+    letterSpacing: 1.5,
   },
   title: {
     maxWidth: 330,
     color: theme.colors.ink,
-    fontSize: 34,
-    lineHeight: 40,
+    fontSize: 32,
+    lineHeight: 38,
     fontWeight: "900",
-    letterSpacing: -0.8,
+    letterSpacing: -0.7,
   },
   subtitle: {
     color: theme.colors.secondary,
-    fontSize: 14,
-    lineHeight: 22,
+    fontSize: 13,
+    lineHeight: 20,
   },
   search: {
-    minHeight: 58,
+    minHeight: 56,
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    paddingHorizontal: 16,
+    gap: 11,
+    paddingHorizontal: 15,
     borderWidth: 1,
     borderColor: theme.colors.border,
     borderRadius: 17,
     backgroundColor: theme.colors.surface,
   },
-  searchIcon: {
-    color: theme.colors.primary,
-    fontSize: 27,
-    lineHeight: 30,
-  },
-  searchText: {
-    flex: 1,
-    color: "#7C8C88",
-    fontSize: 13,
-  },
-  searchArrow: {
-    color: theme.colors.secondary,
-    fontSize: 23,
-  },
+  searchText: { flex: 1, color: theme.colors.secondary, fontSize: 12 },
   hero: {
-    minHeight: 260,
+    minHeight: 250,
     overflow: "hidden",
     justifyContent: "center",
-    padding: 22,
+    padding: 21,
     borderRadius: 25,
-    backgroundColor: theme.colors.ink,
+    backgroundColor: theme.colors.hero,
   },
   heroOrb: {
     position: "absolute",
-    width: 220,
-    height: 220,
-    top: -105,
-    right: -60,
+    width: 210,
+    height: 210,
+    top: -110,
+    right: -65,
     borderRadius: 110,
-    backgroundColor: "#24504A",
+    backgroundColor: "#245B50",
   },
   heroOrbSmall: {
     position: "absolute",
-    width: 116,
-    height: 116,
-    right: 48,
-    bottom: -75,
-    borderRadius: 58,
-    backgroundColor: "#1B3D39",
+    width: 120,
+    height: 120,
+    right: 40,
+    bottom: -78,
+    borderRadius: 60,
+    backgroundColor: "#1C4941",
   },
-  heroContent: {
-    gap: 12,
+  heroContent: { alignItems: "flex-start", gap: 12 },
+  heroTag: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: theme.radius.pill,
+    backgroundColor: theme.colors.heroAccent,
   },
-  heroKicker: {
-    color: "#9DD8CD",
-    fontSize: 9,
+  heroTagText: {
+    color: theme.colors.primaryDark,
+    fontSize: 8,
     fontWeight: "900",
-    letterSpacing: 1.6,
+    letterSpacing: 0.9,
   },
   heroTitle: {
-    maxWidth: 285,
+    maxWidth: 290,
     color: theme.colors.white,
-    fontSize: 26,
-    lineHeight: 32,
+    fontSize: 27,
+    lineHeight: 33,
     fontWeight: "900",
   },
   heroDescription: {
     maxWidth: 290,
-    color: "#D7E5E0",
-    fontSize: 13,
-    lineHeight: 20,
-  },
-  heroButton: {
-    alignSelf: "flex-start",
-    minHeight: 44,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
-    marginTop: 3,
-    paddingHorizontal: 16,
-    borderRadius: 13,
-    backgroundColor: "#9DD8CD",
-  },
-  heroButtonText: {
-    color: theme.colors.ink,
+    color: "#D8E7E1",
     fontSize: 12,
-    fontWeight: "900",
+    lineHeight: 19,
   },
-  heroButtonArrow: {
-    color: theme.colors.ink,
-    fontSize: 17,
-    fontWeight: "700",
-  },
-  section: {
-    gap: 15,
-  },
+  section: { gap: 14 },
   sectionHeading: {
     flexDirection: "row",
     alignItems: "flex-end",
     justifyContent: "space-between",
   },
+  sectionHeadingCopy: { gap: 4 },
   sectionEyebrow: {
-    marginBottom: 5,
     color: theme.colors.secondary,
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: "900",
-    letterSpacing: 1.25,
+    letterSpacing: 1.1,
   },
-  sectionTitle: {
-    color: theme.colors.ink,
-    fontSize: 21,
-    fontWeight: "900",
-  },
-  seeAll: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    paddingVertical: 5,
-  },
-  seeAllText: {
-    color: theme.colors.primary,
-    fontSize: 11,
-    fontWeight: "800",
-  },
-  seeAllArrow: {
-    color: theme.colors.primary,
-    fontSize: 14,
-  },
-  interestGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 11,
-  },
+  sectionTitle: { color: theme.colors.ink, fontSize: 20, fontWeight: "900" },
+  seeAll: { flexDirection: "row", alignItems: "center", gap: 5, paddingVertical: 5 },
+  seeAllText: { color: theme.colors.primary, fontSize: 10, fontWeight: "900" },
+  interestGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   interestCard: {
-    width: "47%",
-    minHeight: 142,
+    width: "48%",
+    minHeight: 112,
     flexGrow: 1,
     flexShrink: 1,
     justifyContent: "space-between",
-    padding: 14,
+    padding: 13,
     borderRadius: 18,
   },
   interestIcon: {
-    fontSize: 24,
+    width: 39,
+    height: 39,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 13,
+    backgroundColor: "rgba(255,255,255,0.7)",
   },
   interestTitle: {
-    marginTop: 10,
     color: theme.colors.ink,
-    fontSize: 13,
-    fontWeight: "900",
-  },
-  interestDescription: {
-    marginTop: 4,
-    color: theme.colors.secondary,
-    fontSize: 10,
-    lineHeight: 15,
-  },
-  footerCard: {
-    gap: 9,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: 20,
-    backgroundColor: theme.colors.surface,
-  },
-  footerEyebrow: {
-    color: theme.colors.primary,
-    fontSize: 9,
-    fontWeight: "900",
-    letterSpacing: 1.4,
-  },
-  footerTitle: {
-    color: theme.colors.ink,
-    fontSize: 19,
-    lineHeight: 25,
-    fontWeight: "900",
-  },
-  footerDescription: {
-    color: theme.colors.secondary,
     fontSize: 12,
-    lineHeight: 19,
+    fontWeight: "900",
   },
-  footerLink: {
-    alignSelf: "flex-start",
+  mapCard: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 9,
-    paddingVertical: 5,
+    gap: 12,
+    padding: 15,
+    borderRadius: 19,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
   },
-  footerLinkText: {
-    color: theme.colors.primaryDark,
+  mapCardIcon: {
+    width: 45,
+    height: 45,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 14,
+    backgroundColor: theme.colors.softMint,
+  },
+  mapCardCopy: { flex: 1, gap: 4 },
+  mapCardEyebrow: {
+    color: theme.colors.primary,
+    fontSize: 8,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
+  mapCardTitle: {
+    color: theme.colors.ink,
     fontSize: 12,
+    lineHeight: 17,
     fontWeight: "900",
   },
-  footerLinkArrow: {
-    color: theme.colors.primaryDark,
-    fontSize: 16,
+  mapCardDescription: { color: theme.colors.secondary, fontSize: 10 },
+  footer: {
+    color: theme.colors.secondary,
+    fontSize: 10,
+    textAlign: "center",
+    paddingBottom: 4,
   },
-  pressed: {
-    opacity: 0.78,
-  },
+  pressed: { opacity: 0.78, transform: [{ scale: 0.99 }] },
 });
