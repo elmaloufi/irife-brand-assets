@@ -32,7 +32,7 @@ The experience should create curiosity without making the interface noisy. Visua
 | Terracotta | #B66D50 | Selective cultural accent |
 | Saffron gold | #D7AF6E | Small highlights and decorative details |
 | Charcoal green | #213531 | Main text |
-| Muted green-grey | #657670 | Secondary text |
+| Muted green-grey | #5E7069 | Secondary text |
 
 Use gold and terracotta as accents, not as competing primary colors. Keep body text on light surfaces and use white text only on sufficiently dark hero surfaces.
 
