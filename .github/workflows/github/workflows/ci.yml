@@ -1,0 +1,18 @@
+irife-platform/
+├── apps/
+│   └── mobile/          # Expo + React Native
+├── services/
+│   └── api/             # Backend
+├── packages/
+│   └── contracts/       # Shared contracts
+├── docs/
+│   ├── PRD.md
+│   ├── ARCHITECTURE.md
+│   └── SECURITY.md
+├── infrastructure/
+│   └── docker/
+├── tests/
+├── .github/
+│   └── workflows/
+├── pnpm-workspace.yaml
+└── README.md
