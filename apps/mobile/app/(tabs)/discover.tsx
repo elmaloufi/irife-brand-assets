@@ -30,7 +30,9 @@ export default function DiscoverScreen() {
         <Pressable style={({ pressed }) => [styles.search, pressed && styles.pressed]}>
           <Ionicons name="search-outline" size={19} color={theme.colors.primary} />
           <Text style={styles.searchText}>Where would you like to explore?</Text>
-          <Ionicons name="arrow-forward" size={17} color={theme.colors.secondary} />
+          <View style={styles.searchAction}>
+            <Ionicons name="arrow-forward" size={15} color={theme.colors.white} />
+          </View>
         </Pressable>
       </Link>
 
@@ -56,8 +58,19 @@ export default function DiscoverScreen() {
       <View style={styles.editorialCard}>
         <View style={styles.editorialArt}>
           <View style={styles.sun} />
-          <View style={styles.mountainBack} />
-          <View style={styles.mountainFront} />
+          <View style={styles.archOuter}>
+            <View style={styles.archInner}>
+              <View style={styles.archDoor}>
+                <View style={styles.archDoorGlow} />
+              </View>
+            </View>
+          </View>
+          <View pointerEvents="none" style={styles.tileMotif}>
+            <View style={styles.tileDiamond} />
+            <View style={styles.tileDiamondOffset} />
+            <View style={styles.tileDiamond} />
+            <View style={styles.tileDiamondOffset} />
+          </View>
           <View style={styles.editorialTag}>
             <Text style={styles.editorialTagText}>IRIFE COLLECTION</Text>
           </View>
@@ -118,25 +131,40 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   search: {
-    minHeight: 54,
+    minHeight: 58,
     flexDirection: "row",
     alignItems: "center",
     gap: 11,
-    paddingHorizontal: 15,
-    borderRadius: 16,
+    paddingLeft: 15,
+    paddingRight: 8,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: theme.colors.border,
     backgroundColor: theme.colors.surface,
+    shadowColor: theme.colors.primaryDark,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 2,
   },
   searchText: {
     flex: 1,
     color: theme.colors.secondary,
     fontSize: 12,
   },
+  searchAction: {
+    width: 36,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 12,
+    backgroundColor: theme.colors.primary,
+  },
   categories: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   chip: {
-    paddingHorizontal: 13,
-    paddingVertical: 9,
+    minHeight: 40,
+    justifyContent: "center",
+    paddingHorizontal: 14,
     borderRadius: theme.radius.pill,
     borderWidth: 1,
     borderColor: theme.colors.border,
@@ -150,45 +178,98 @@ const styles = StyleSheet.create({
   chipTextSelected: { color: theme.colors.white },
   editorialCard: {
     overflow: "hidden",
-    borderRadius: 23,
+    borderRadius: 25,
     backgroundColor: theme.colors.surface,
     borderWidth: 1,
     borderColor: theme.colors.border,
+    shadowColor: theme.colors.primaryDark,
+    shadowOffset: { width: 0, height: 7 },
+    shadowOpacity: 0.055,
+    shadowRadius: 15,
+    elevation: 2,
   },
   editorialArt: {
-    height: 175,
+    height: 194,
     overflow: "hidden",
     position: "relative",
-    backgroundColor: "#E8E1D2",
+    backgroundColor: "#E9D8C4",
   },
   sun: {
     position: "absolute",
-    width: 74,
-    height: 74,
-    top: 24,
-    right: 36,
-    borderRadius: 37,
-    backgroundColor: "#E4B77D",
+    width: 78,
+    height: 78,
+    top: 23,
+    right: 34,
+    borderRadius: 39,
+    backgroundColor: theme.colors.gold,
+    opacity: 0.92,
   },
-  mountainBack: {
+  archOuter: {
     position: "absolute",
-    width: 250,
-    height: 150,
-    left: -30,
-    bottom: -92,
-    borderRadius: 30,
-    backgroundColor: "#9AB7A4",
-    transform: [{ rotate: "-22deg" }],
+    width: 166,
+    height: 238,
+    left: "33%",
+    bottom: -100,
+    alignItems: "center",
+    paddingTop: 15,
+    borderTopLeftRadius: 85,
+    borderTopRightRadius: 85,
+    backgroundColor: theme.colors.terracotta,
   },
-  mountainFront: {
-    position: "absolute",
-    width: 270,
+  archInner: {
+    width: 136,
+    height: 215,
+    alignItems: "center",
+    paddingTop: 18,
+    borderTopLeftRadius: 70,
+    borderTopRightRadius: 70,
+    backgroundColor: "#F4E9D9",
+  },
+  archDoor: {
+    width: 78,
     height: 145,
-    right: -40,
-    bottom: -92,
-    borderRadius: 30,
-    backgroundColor: "#426F62",
-    transform: [{ rotate: "20deg" }],
+    alignItems: "center",
+    paddingTop: 21,
+    borderTopLeftRadius: 42,
+    borderTopRightRadius: 42,
+    backgroundColor: theme.colors.primaryDark,
+  },
+  archDoorGlow: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: "rgba(230,197,143,0.6)",
+    backgroundColor: "rgba(230,197,143,0.12)",
+  },
+  tileMotif: {
+    position: "absolute",
+    top: 62,
+    left: 24,
+    width: 68,
+    height: 68,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 9,
+    opacity: 0.8,
+  },
+  tileDiamond: {
+    width: 16,
+    height: 16,
+    borderWidth: 1,
+    borderColor: "rgba(20,62,55,0.45)",
+    borderRadius: 3,
+    transform: [{ rotate: "45deg" }],
+  },
+  tileDiamondOffset: {
+    width: 16,
+    height: 16,
+    borderWidth: 1,
+    borderColor: "rgba(182,109,80,0.72)",
+    borderRadius: 3,
+    transform: [{ rotate: "45deg" }],
   },
   editorialTag: {
     position: "absolute",
@@ -197,7 +278,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 7,
     borderRadius: theme.radius.pill,
-    backgroundColor: "rgba(255,255,255,0.9)",
+    backgroundColor: "rgba(255,255,255,0.92)",
   },
   editorialTagText: {
     color: theme.colors.primaryDark,
@@ -234,7 +315,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     gap: 9,
     padding: 18,
-    borderRadius: 20,
+    borderRadius: 21,
     borderWidth: 1,
     borderColor: theme.colors.border,
     backgroundColor: theme.colors.surface,
@@ -249,7 +330,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: { color: theme.colors.ink, fontSize: 14, fontWeight: "900" },
   emptyDescription: { color: theme.colors.secondary, fontSize: 11, lineHeight: 17 },
-  mapLink: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 2 },
+  mapLink: { flexDirection: "row", alignItems: "center", gap: 8, marginTop: 2, minHeight: 40 },
   mapLinkText: { color: theme.colors.primary, fontSize: 11, fontWeight: "900" },
-  pressed: { opacity: 0.78 },
+  pressed: { opacity: 0.78, transform: [{ scale: 0.99 }] },
 });
