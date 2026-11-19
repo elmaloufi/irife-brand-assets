@@ -1,33 +1,21 @@
+import type { ReactNode } from "react";
 import { Link } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  type StyleProp,
+  type ViewStyle,
+} from "react-native";
 import { ScreenContainer } from "../../src/components/ScreenContainer";
 import { theme } from "../../src/theme";
 
 const interests = [
-  {
-    icon: "🌊",
-    title: "Coast & ocean",
-    description: "Beaches, sea air and slow days",
-    tint: "#E5F1F2",
-  },
-  {
-    icon: "⛰️",
-    title: "Mountains & nature",
-    description: "Open landscapes and fresh air",
-    tint: "#E9F0E7",
-  },
-  {
-    icon: "🏛️",
-    title: "Culture & heritage",
-    description: "Architecture, craft and history",
-    tint: "#F4E9DC",
-  },
-  {
-    icon: "🍃",
-    title: "Food & local life",
-    description: "Flavours and everyday moments",
-    tint: "#F0E9EF",
-  },
+  { icon: "🌊", title: "Coast & ocean", description: "Beaches, sea air and slow days", tint: "#E5F1F2" },
+  { icon: "⛰️", title: "Mountains & nature", description: "Open landscapes and fresh air", tint: "#E9F0E7" },
+  { icon: "🏛️", title: "Culture & heritage", description: "Architecture, craft and history", tint: "#F4E9DC" },
+  { icon: "🍃", title: "Food & local life", description: "Flavours and everyday moments", tint: "#F0E9EF" },
 ];
 
 function DiscoverLink({
@@ -35,9 +23,9 @@ function DiscoverLink({
   label,
   style,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   label: string;
-  style?: object;
+  style?: StyleProp<ViewStyle>;
 }) {
   return (
     <Link href="/discover" asChild>
@@ -116,7 +104,7 @@ export default function HomeScreen() {
           {interests.map((interest) => (
             <DiscoverLink
               key={interest.title}
-              label={`Explore ${interest.title}`}
+              label={"Explore " + interest.title}
               style={[styles.interestCard, { backgroundColor: interest.tint }]}
             >
               <Text style={styles.interestIcon}>{interest.icon}</Text>
@@ -351,9 +339,10 @@ const styles = StyleSheet.create({
     gap: 11,
   },
   interestCard: {
-    width: "48%",
+    width: "47%",
     minHeight: 142,
     flexGrow: 1,
+    flexShrink: 1,
     justifyContent: "space-between",
     padding: 14,
     borderRadius: 18,
