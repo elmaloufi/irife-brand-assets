@@ -1,8 +1,9 @@
-import { Body, Controller, Get, HttpCode, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AccessTokenGuard } from './access-token.guard.js';
 import { CurrentUser } from './current-user.decorator.js';
 import { IdentityService } from './identity.service.js';
+import { ChangePasswordDto } from './dto/change-password.dto.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RefreshDto } from './dto/refresh.dto.js';
 import { RegisterDto } from './dto/register.dto.js';
@@ -36,6 +37,29 @@ export class IdentityController {
   me(@CurrentUser() user: AuthenticatedUser) {
     const { sessionId: _sessionId, ...safeUser } = user;
     return safeUser;
+  }
+
+  @Get('sessions')
+  @ApiBearerAuth()
+  @UseGuards(AccessTokenGuard)
+  sessions(@CurrentUser() user: AuthenticatedUser) {
+    return this.identity.listSessions(user.id, user.sessionId);
+  }
+
+  @Delete('sessions/:sessionId')
+  @HttpCode(204)
+  @ApiBearerAuth()
+  @UseGuards(AccessTokenGuard)
+  async revokeSession(@CurrentUser() user: AuthenticatedUser, @Param('sessionId') sessionId: string): Promise<void> {
+    await this.identity.revokeSession(user.id, sessionId);
+  }
+
+  @Post('password')
+  @HttpCode(204)
+  @ApiBearerAuth()
+  @UseGuards(AccessTokenGuard)
+  async changePassword(@CurrentUser() user: AuthenticatedUser, @Body() body: ChangePasswordDto): Promise<void> {
+    await this.identity.changePassword(user.id, body.currentPassword, body.newPassword);
   }
 
   @Post('logout')
