@@ -12,7 +12,7 @@ interface PreferencesContextValue {
 const PreferencesContext = createContext<PreferencesContextValue | null>(null);
 
 function applyAppearance(appearance: AppPreferences['appearance']) {
-  Appearance.setColorScheme(appearance === 'system' ? null : appearance);
+  Appearance.setColorScheme(appearance === 'system' ? 'unspecified' : appearance);
 }
 
 export function PreferencesProvider({ children }: PropsWithChildren) {
