@@ -1,7 +1,7 @@
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text as NativeText, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { AppText as Text } from '../../src/components/AppText';
 import type { ExperienceDetail } from '@irife/contracts';
 import { useAuth } from '../../src/auth/AuthProvider';
