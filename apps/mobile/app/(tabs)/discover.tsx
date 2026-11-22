@@ -6,9 +6,10 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
+  Text as NativeText,
   View,
 } from 'react-native';
+import { AppText as Text } from '../../src/components/AppText';
 import type { DestinationSummary, ExperienceCard } from '@irife/contracts';
 import { ScreenContainer } from '../../src/components/ScreenContainer';
 import { getDestinations, getExperiences } from '../../src/services/api/discovery';
