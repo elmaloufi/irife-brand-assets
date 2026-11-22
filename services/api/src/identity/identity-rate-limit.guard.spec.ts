@@ -1,55 +1,57 @@
 import { describe, expect, it, jest } from '@jest/globals';
-import { HttpException, type ExecutionContext } from '@nestjs/common';
+import { HttpException } from '@nestjs/common';
+import type { ExecutionContext } from '@nestjs/common';
 import { IdentityRateLimitGuard } from './identity-rate-limit.guard.js';
 
-function contextFor(ip: string, path: string): ExecutionContext {
-  const request = { ip, method: 'POST', path, route: { path } };
+function createContext(path: string) {
   const response = { setHeader: jest.fn() };
-  return {
+  const request = {
+    originalUrl: path,
+    path,
+    method: 'POST',
+    ip: '192.0.2.10',
+    socket: { remoteAddress: '192.0.2.10' },
+  };
+  const context = {
     switchToHttp: () => ({
       getRequest: () => request,
       getResponse: () => response,
     }),
   } as unknown as ExecutionContext;
-}
-
-function expectLimited(guard: IdentityRateLimitGuard, context: ExecutionContext): void {
-  try {
-    guard.canActivate(context);
-    throw new Error('Expected the request to be rate limited.');
-  } catch (error) {
-    expect(error).toBeInstanceOf(HttpException);
-    expect((error as HttpException).getStatus()).toBe(429);
-  }
+  return { context, response };
 }
 
 describe('IdentityRateLimitGuard', () => {
-  it('limits repeated login attempts per client address and route', () => {
-    const guard = new IdentityRateLimitGuard();
-    const context = contextFor('192.0.2.10', '/identity/login');
-    for (let attempt = 0; attempt < 10; attempt += 1) expect(guard.canActivate(context)).toBe(true);
-    expectLimited(guard, context);
+  it('allows an authentication attempt while the shared database bucket is below its limit', async () => {
+    const prisma = {
+      $queryRaw: jest.fn().mockResolvedValue([{ requestCount: 1, windowStartedAt: new Date() }]),
+      authRateLimitBucket: { deleteMany: jest.fn().mockResolvedValue({ count: 0 }) },
+    };
+    const guard = new IdentityRateLimitGuard(prisma as never);
+    const { context } = createContext('/api/v1/identity/login');
+
+    await expect(guard.canActivate(context)).resolves.toBe(true);
+    expect(prisma.$queryRaw).toHaveBeenCalledTimes(1);
   });
 
-  it('keeps limits isolated between client addresses', () => {
-    const guard = new IdentityRateLimitGuard();
-    const firstClient = contextFor('192.0.2.11', '/identity/login');
-    const secondClient = contextFor('192.0.2.12', '/identity/login');
-    for (let attempt = 0; attempt < 10; attempt += 1) guard.canActivate(firstClient);
-    expect(guard.canActivate(secondClient)).toBe(true);
+  it('blocks attempts above the login threshold and supplies Retry-After', async () => {
+    const prisma = {
+      $queryRaw: jest.fn().mockResolvedValue([{ requestCount: 6, windowStartedAt: new Date() }]),
+      authRateLimitBucket: { deleteMany: jest.fn().mockResolvedValue({ count: 0 }) },
+    };
+    const guard = new IdentityRateLimitGuard(prisma as never);
+    const { context, response } = createContext('/api/v1/identity/login');
+
+    await expect(guard.canActivate(context)).rejects.toBeInstanceOf(HttpException);
+    expect(response.setHeader).toHaveBeenCalledWith('Retry-After', expect.any(String));
   });
 
-  it('normalizes the global API prefix before selecting a route limit', () => {
-    const guard = new IdentityRateLimitGuard();
-    const context = contextFor('192.0.2.14', '/api/v1/identity/register');
-    for (let attempt = 0; attempt < 5; attempt += 1) guard.canActivate(context);
-    expectLimited(guard, context);
-  });
+  it('does not rate-limit routes outside the authentication policy', async () => {
+    const prisma = { $queryRaw: jest.fn() };
+    const guard = new IdentityRateLimitGuard(prisma as never);
+    const { context } = createContext('/api/v1/health');
 
-  it('applies a stricter limit to registration', () => {
-    const guard = new IdentityRateLimitGuard();
-    const context = contextFor('192.0.2.13', '/identity/register');
-    for (let attempt = 0; attempt < 5; attempt += 1) guard.canActivate(context);
-    expectLimited(guard, context);
+    await expect(guard.canActivate(context)).resolves.toBe(true);
+    expect(prisma.$queryRaw).not.toHaveBeenCalled();
   });
 });

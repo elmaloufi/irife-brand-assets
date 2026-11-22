@@ -35,7 +35,7 @@ Use **opaque, random bearer tokens backed by server-side sessions in PostgreSQL*
 - Passwords are never stored in plaintext or reversibly encrypted.
 - The initial backend slice uses Node.js built-in **scrypt** with a random 128-bit salt, cost N=32768, r=8, p=1, a 64-byte derived key, and a 64 MiB memory ceiling. Verification uses constant-time comparison.
 - This implementation choice avoids introducing an unverified native addon into the mobile-adjacent monorepo. Before public launch, benchmark scrypt on the intended API host and reassess Argon2id; any algorithm change must support versioned hashes and a safe rehash-on-login migration.
-- The first local-only slice applies conservative in-process, per-IP fixed-window limits to registration, login, and refresh. These limits are defense-in-depth for a single API process only; distributed rate limiting backed by a shared store remains mandatory before multi-instance or public exposure.
+- Registration, login, and refresh use atomic fixed-window limits stored in PostgreSQL, so the counters are shared across API instances. The database stores an HMAC of the route, method, and client IP rather than the raw IP. Initial limits are 3 registrations per hour, 5 login attempts per 15 minutes, and 20 refresh attempts per 15 minutes. Reassess these values with real traffic and add edge-level abuse protection before public launch.
 - Login performs a dummy scrypt verification when an email is unknown so the obvious account-existence timing difference is reduced. Registration failures use a generic response and do not identify duplicate email addresses.
 - Authentication responses must not disclose whether an account exists. Account recovery, email/SMS verification, social sign-in, and multi-factor authentication are not part of this foundation and require separate product/security decisions before implementation.
 
@@ -65,5 +65,5 @@ Use **opaque, random bearer tokens backed by server-side sessions in PostgreSQL*
 
 - Session validation adds a bounded database lookup to protected requests; use indexed token-digest columns and measure before optimizing.
 - Refresh rotation must be transactional and concurrency-safe. A replay must revoke the affected session rather than silently mint another token.
-- Audit events for sensitive session actions and distributed rate limiting are release gates before public exposure. The in-process limiter is not a substitute for a shared, distributed control.
+- Audit events for sensitive session actions, monitoring of rate-limit events, and edge-level abuse protection remain release gates before public exposure. PostgreSQL-backed counters provide cross-instance consistency but do not replace upstream DDoS protection.
 - Provider onboarding, verification evidence, admin workflow, retention, and account recovery remain open before those capabilities are exposed.
