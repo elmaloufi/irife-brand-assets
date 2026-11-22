@@ -36,5 +36,8 @@ jobs:
       - name: Run mobile and shared-contract tests
         run: npm test
 
+      - name: Verify API workspace foundation
+        run: node --test scripts/workspace.test.mjs
+
       - name: Run shared-contract build and mobile TypeScript check
         run: npm run build
