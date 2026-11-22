@@ -4,10 +4,11 @@ export function getAuthRedirect({ isLoading, hasSession, segments }) {
   if (isLoading) return null;
 
   const [rootSegment, authScreen] = segments;
-  const isPublicAuthRoute = rootSegment === 'auth' && PUBLIC_AUTH_ROUTES.has(authScreen);
+  const isAuthRoute = rootSegment === 'auth';
+  const isPublicAuthRoute = isAuthRoute && PUBLIC_AUTH_ROUTES.has(authScreen);
 
   if (!hasSession && !isPublicAuthRoute) return '/auth/sign-in';
-  if (hasSession && isPublicAuthRoute) return '/(tabs)';
+  if (hasSession && isAuthRoute) return '/(tabs)';
 
   return null;
 }
