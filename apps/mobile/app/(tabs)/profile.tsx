@@ -1,6 +1,6 @@
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Link, router } from 'expo-router';
-import { Alert, Pressable, StyleSheet, Text as NativeText, TextInput, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { AppText as Text } from '../../src/components/AppText';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../src/auth/AuthProvider';
