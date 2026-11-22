@@ -15,6 +15,10 @@ export function createEnquiry(input: CreateEnquiryInput): Promise<EnquirySummary
   });
 }
 
+export function cancelMyEnquiry(id: string): Promise<EnquirySummary> {
+  return authenticatedApiRequest(`/api/v1/me/enquiries/${encodeURIComponent(id)}/cancel`, { method: 'POST' });
+}
+
 export function getMyEnquiries(page = 1, limit = 20): Promise<PaginatedResponse<EnquirySummary>> {
   const params = new URLSearchParams({ page: String(page), limit: String(limit) });
   return authenticatedApiRequest(`/api/v1/me/enquiries?${params.toString()}`);

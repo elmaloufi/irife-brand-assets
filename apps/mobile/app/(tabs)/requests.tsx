@@ -5,7 +5,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 import type { EnquirySummary } from '@irife/contracts';
 import { useAuth } from '../../src/auth/AuthProvider';
 import { ScreenContainer } from '../../src/components/ScreenContainer';
-import { getMyEnquiries } from '../../src/services/api/enquiries';
+import { cancelMyEnquiry, getMyEnquiries } from '../../src/services/api/enquiries';
 import { theme } from '../../src/theme';
 
 function formatDate(value: string): string {
@@ -23,6 +23,7 @@ export default function RequestsScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!user) { setItems([]); setLoading(false); return; }
@@ -33,6 +34,19 @@ export default function RequestsScreen() {
   }, [user]);
 
   useEffect(() => { void load(); }, [load, reloadKey]);
+
+  async function cancel(id: string) {
+    setCancellingId(id);
+    setError(null);
+    try {
+      const updated = await cancelMyEnquiry(id);
+      setItems((current) => current.map((item) => item.id === id ? updated : item));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Could not cancel this request.');
+    } finally {
+      setCancellingId(null);
+    }
+  }
 
   return (
     <ScreenContainer>
@@ -75,6 +89,12 @@ export default function RequestsScreen() {
             <Text style={styles.host}>Hosted by {item.experience.provider.name}</Text>
             <View style={styles.metaRow}><Ionicons name="people-outline" size={15} color={theme.colors.secondary} /><Text style={styles.metaText}>{item.guestCount} {item.guestCount === 1 ? 'guest' : 'guests'}</Text><Ionicons name="calendar-outline" size={15} color={theme.colors.secondary} /><Text style={styles.metaText}>Sent {formatDate(item.createdAt)}</Text></View>
             <Text numberOfLines={3} style={styles.message}>{item.message}</Text>
+            {item.status === 'PENDING' ? (
+              <Pressable accessibilityRole="button" disabled={cancellingId === item.id} onPress={() => void cancel(item.id)} style={styles.cancelButton}>
+                {cancellingId === item.id ? <ActivityIndicator size="small" color={theme.colors.danger} /> : <Ionicons name="close-circle-outline" size={15} color={theme.colors.danger} />}
+                <Text style={styles.cancelText}>{cancellingId === item.id ? 'Cancelling…' : 'Cancel request'}</Text>
+              </Pressable>
+            ) : null}
           </View>
         ))}
       </View> : null}
@@ -103,5 +123,7 @@ const styles = StyleSheet.create({
   statusText: { color: theme.colors.primaryDark, fontSize: 9, fontWeight: '900' }, experienceTitle: { color: theme.colors.ink, fontSize: 15, fontWeight: '900' },
   host: { color: theme.colors.secondary, fontSize: 10 }, metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }, metaText: { color: theme.colors.secondary, fontSize: 9 },
   message: { color: theme.colors.ink, fontSize: 11, lineHeight: 17, paddingTop: 4, borderTopWidth: 1, borderTopColor: theme.colors.border },
+  cancelButton: { minHeight: 36, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 11, backgroundColor: theme.colors.dangerSoft },
+  cancelText: { color: theme.colors.danger, fontSize: 10, fontWeight: '900' },
   backLink: { alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 8, padding: 10 }, backText: { color: theme.colors.primary, fontSize: 11, fontWeight: '800' },
 });
