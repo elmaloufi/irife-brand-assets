@@ -7,6 +7,7 @@ import { ScreenContainer } from '../src/components/ScreenContainer';
 import { signOutAndNavigate } from '../src/auth/sign-out-navigation.mjs';
 import { usePreferences } from '../src/services/preferences/PreferencesProvider';
 import { translate, resolveLocale } from '../src/services/preferences/locale.mjs';
+import { getRegionChoices } from '../src/services/preferences/regions.mjs';
 import type { AppAppearance, AppCurrency, AppLanguage, AppPreferences, DistanceUnit } from '../src/services/preferences/preferences';
 import { theme } from '../src/theme';
 
@@ -92,12 +93,7 @@ export default function SettingsScreen() {
             <View style={styles.group}>
               <PreferenceGroup<AppLanguage> title={t('appLanguage')} description={t('chooseLanguage')} value={preferences.language} choices={[{value:'en',label:t('english')},{value:'fr',label:t('french')},{value:'ar',label:t('arabic')},{value:'es',label:t('spanish')},{value:'de',label:t('german')},{value:'pt',label:t('portuguese')},{value:'it',label:t('italian')},{value:'zh',label:t('chinese')},{value:'ja',label:t('japanese')},{value:'tr',label:t('turkish')},{value:'nl',label:t('dutch')}] } onChange={(value) => void update('language', value)} />
               <View style={styles.separator} />
-              <PreferenceGroup<string> title={t('region')} description={t('regionDescription')} value={preferences.region} choices={[
-                {value:'MA',label:'Morocco'},{value:'FR',label:'France'},{value:'ES',label:'Spain'},
-                {value:'GB',label:'United Kingdom'},{value:'US',label:'United States'},{value:'CA',label:'Canada'},
-                {value:'DE',label:'Germany'},{value:'NL',label:'Netherlands'},{value:'AE',label:'United Arab Emirates'},
-                {value:'SA',label:'Saudi Arabia'},{value:'BE',label:'Belgium'},
-              ]} onChange={(value) => void update('region', value)} />
+              <PreferenceGroup<string> title={t('region')} description={t('regionDescription')} value={preferences.region} choices={getRegionChoices(locale)} onChange={(value) => void update('region', value)} />
               <View style={styles.separator} />
               <PreferenceGroup<AppCurrency> title={t('currency')} description={t('currencyDescription')} value={preferences.currency} choices={[{value:'MAD',label:'MAD'},{value:'EUR',label:'EUR'},{value:'USD',label:'USD'}]} onChange={(value) => void update('currency', value)} />
               <View style={styles.separator} />
