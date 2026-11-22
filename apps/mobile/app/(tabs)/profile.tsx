@@ -1,9 +1,10 @@
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Link, router } from 'expo-router';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../src/auth/AuthProvider';
 import { ScreenContainer } from '../../src/components/ScreenContainer';
+import { signOutAndNavigate } from '../../src/auth/sign-out-navigation.mjs';
 import { theme } from '../../src/theme';
 
 function AccountRow({
@@ -91,7 +92,7 @@ export default function ProfileScreen() {
       </View>
 
       {user ? (
-        <Pressable accessibilityRole="button" disabled={isSubmitting} onPress={() => void signOut().then(() => router.replace('/(tabs)/profile'))} style={styles.signOut}>
+        <Pressable accessibilityRole="button" disabled={isSubmitting} onPress={() => void signOutAndNavigate(signOut, () => router.replace('/(tabs)/profile'), () => Alert.alert('Sign-out could not be confirmed', 'Your local session was cleared, but the server could not confirm revocation. Reconnect and review active sessions.'))} style={styles.signOut}>
           <Ionicons name="log-out-outline" size={18} color={theme.colors.danger} />
           <Text style={styles.signOutText}>{isSubmitting ? 'Signing out…' : 'Sign out'}</Text>
         </Pressable>
