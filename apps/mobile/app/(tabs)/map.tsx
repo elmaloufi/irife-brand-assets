@@ -1,6 +1,7 @@
 import { Ionicons } from "@react-native-vector-icons/ionicons";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text as NativeText, View } from 'react-native';
+import { AppText as Text } from '../../src/components/AppText';
 import { ScreenContainer } from "../../src/components/ScreenContainer";
 import { theme } from "../../src/theme";
 
