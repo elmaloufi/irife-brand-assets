@@ -47,7 +47,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               state: 'open',
-              ref: `refs/pull/${context.issue.number}/head`,
+              ref: `refs/heads/${context.payload.pull_request.head.ref}`,
               tool_name: 'CodeQL',
               per_page: 100,
             });
@@ -60,4 +60,14 @@ jobs:
               start_line: alert.most_recent_instance?.location?.start_line,
               html_url: alert.html_url,
             }));
+            core.info('Open CodeQL alerts for PR head branch:');
             core.info(JSON.stringify(alerts, null, 2));
+            const all = await github.rest.codeScanning.listAlertsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              tool_name: 'CodeQL',
+              per_page: 100,
+            });
+            core.info('All open CodeQL alerts in repository:');
+            core.info(JSON.stringify(all.data.map((alert) => ({ number: alert.number, rule: alert.rule.id, severity: alert.rule.security_severity_level, message: alert.most_recent_instance?.message?.text, path: alert.most_recent_instance?.location?.path, start_line: alert.most_recent_instance?.location?.start_line, html_url: alert.html_url })), null, 2));
