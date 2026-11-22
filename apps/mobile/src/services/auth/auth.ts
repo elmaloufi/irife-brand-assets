@@ -70,6 +70,19 @@ export async function refreshSession(current: AuthSession): Promise<AuthSession 
   })();
   return refreshInFlight;
 }
+
+export async function requestPasswordReset(email: string): Promise<void> {
+  await apiRequest<{ accepted: true }>('/api/v1/identity/password/forgot', {
+    method: 'POST', body: JSON.stringify({ email: email.trim().toLowerCase() }),
+  });
+}
+
+export async function completePasswordReset(token: string, newPassword: string): Promise<void> {
+  await apiRequest<{ reset: true }>('/api/v1/identity/password/reset', {
+    method: 'POST', body: JSON.stringify({ token, newPassword }),
+  });
+}
+
 export async function getCurrentUser(session: AuthSession): Promise<AuthUser> {
   return apiRequest<AuthUser>('/api/v1/identity/me', { headers: { Authorization: `Bearer ${session.accessToken}` } });
 }
