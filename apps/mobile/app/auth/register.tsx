@@ -27,7 +27,7 @@ export default function RegisterScreen() {
     clearError();
     try {
       await signUp(displayName, email, password);
-      router.replace('/(tabs)/profile');
+      router.replace('/(tabs)');
     } catch {
       // The provider exposes a safe, user-readable error.
     }
