@@ -8,7 +8,7 @@ export const translations = {
     themeDescription: 'Choose how IRIFE should look', system: 'System', light: 'Light', dark: 'Dark',
     travelPreferences: 'Travel preferences', saved: 'Preferences saved on this device', loading: 'Loading your preferences…',
     english: 'English', french: 'Français', arabic: 'العربية', kilometres: 'Kilometres', miles: 'Miles',
-    privacy: 'Privacy & permissions', security: 'Account security',
+    privacy: 'Privacy & permissions', security: 'Account security', region: 'Country or region', regionDescription: 'Used for regional formats and travel defaults', home: 'Home', discover: 'Discover', map: 'Map', guide: 'Guide', profile: 'Account',
   },
   fr: {
     settings: 'Paramètres', account: 'Compte', appLanguage: 'Langue de l’application', chooseLanguage: 'Choisissez votre langue préférée',
@@ -17,7 +17,7 @@ export const translations = {
     themeDescription: 'Choisissez l’apparence d’IRIFE', system: 'Système', light: 'Clair', dark: 'Sombre',
     travelPreferences: 'Préférences de voyage', saved: 'Préférences enregistrées sur cet appareil', loading: 'Chargement des préférences…',
     english: 'English', french: 'Français', arabic: 'العربية', kilometres: 'Kilomètres', miles: 'Miles',
-    privacy: 'Confidentialité et autorisations', security: 'Sécurité du compte',
+    privacy: 'Confidentialité et autorisations', security: 'Sécurité du compte', region: 'Pays ou région', regionDescription: 'Pour les formats régionaux et les préférences de voyage', home: 'Accueil', discover: 'Découvrir', map: 'Carte', guide: 'Guide', profile: 'Compte',
   },
   ar: {
     settings: 'الإعدادات', account: 'الحساب', appLanguage: 'لغة التطبيق', chooseLanguage: 'اختر لغتك المفضلة',
@@ -26,7 +26,7 @@ export const translations = {
     themeDescription: 'اختر مظهر تطبيق إيريف', system: 'حسب النظام', light: 'فاتح', dark: 'داكن',
     travelPreferences: 'تفضيلات السفر', saved: 'تم حفظ التفضيلات على هذا الجهاز', loading: 'جارٍ تحميل التفضيلات…',
     english: 'الإنجليزية', french: 'الفرنسية', arabic: 'العربية', kilometres: 'كيلومتر', miles: 'ميل',
-    privacy: 'الخصوصية والأذونات', security: 'أمان الحساب',
+    privacy: 'الخصوصية والأذونات', security: 'أمان الحساب', region: 'الدولة أو المنطقة', regionDescription: 'لتنسيقات المنطقة وتفضيلات السفر', home: 'الرئيسية', discover: 'اكتشف', map: 'الخريطة', guide: 'المرشد', profile: 'الحساب',
   },
 };
 
