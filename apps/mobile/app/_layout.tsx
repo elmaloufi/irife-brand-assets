@@ -7,61 +7,52 @@ import { IBMPlexSansArabic_400Regular } from '@expo-google-fonts/ibm-plex-sans-a
 import { IBMPlexSansArabic_500Medium } from '@expo-google-fonts/ibm-plex-sans-arabic/500Medium';
 import { IBMPlexSansArabic_600SemiBold } from '@expo-google-fonts/ibm-plex-sans-arabic/600SemiBold';
 import { IBMPlexSansArabic_700Bold } from '@expo-google-fonts/ibm-plex-sans-arabic/700Bold';
-import { Redirect, Stack, useSegments } from 'expo-router';
+import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ActivityIndicator, View, useColorScheme } from 'react-native';
 import { AuthProvider, useAuth } from '../src/auth/AuthProvider';
-import { getAuthRedirect } from '../src/auth/route-access.mjs';
+import { getAuthRouteGuards } from '../src/auth/route-access.mjs';
 import { AppErrorBoundary } from '../src/components/AppErrorBoundary';
 import { PreferencesProvider, usePreferences } from '../src/services/preferences/PreferencesProvider';
 import { theme } from '../src/theme';
 
-function AuthenticatedNavigation({ dark }: { dark: boolean }) {
+function AppNavigation() {
+  const { preferences } = usePreferences();
   const { user, isLoading } = useAuth();
-  const segments = useSegments();
-  const redirect = getAuthRedirect({
-    isLoading,
-    hasSession: Boolean(user),
-    segments,
-  });
-
-  if (isLoading) {
-    return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: dark ? '#101B19' : theme.colors.background }}>
-        <ActivityIndicator color={theme.colors.primary} />
-      </View>
-    );
-  }
-
-  if (redirect === '/auth/sign-in') return <Redirect href="/auth/sign-in" />;
-  if (redirect === '/(tabs)') return <Redirect href="/(tabs)" />;
+  const systemScheme = useColorScheme();
+  const effectiveScheme = preferences.appearance === 'system' ? systemScheme : preferences.appearance;
+  const dark = effectiveScheme === 'dark';
+  const guards = getAuthRouteGuards({ isLoading, hasSession: Boolean(user) });
 
   return (
     <>
       <StatusBar style={dark ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: dark ? '#101B19' : theme.colors.background } }}>
         <Stack.Screen name="index" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="auth/sign-in" options={{ presentation: 'card' }} />
-        <Stack.Screen name="auth/register" options={{ presentation: 'card' }} />
-        <Stack.Screen name="auth/reset-password" options={{ presentation: 'card' }} />
-        <Stack.Screen name="experiences/[id]" />
-        <Stack.Screen name="settings" />
-        <Stack.Screen name="settings/security" />
+        <Stack.Screen name="+not-found" />
+
+        <Stack.Protected guard={guards.authenticated}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="experiences/[id]" />
+          <Stack.Screen name="saved" />
+          <Stack.Screen name="settings" />
+          <Stack.Screen name="settings/security" />
+        </Stack.Protected>
+
+        <Stack.Protected guard={guards.public}>
+          <Stack.Screen name="auth/sign-in" options={{ presentation: 'card' }} />
+          <Stack.Screen name="auth/register" options={{ presentation: 'card' }} />
+          <Stack.Screen name="auth/reset-password" options={{ presentation: 'card' }} />
+        </Stack.Protected>
       </Stack>
     </>
   );
 }
 
-function AppNavigation() {
-  const { preferences } = usePreferences();
-  const systemScheme = useColorScheme();
-  const effectiveScheme = preferences.appearance === 'system' ? systemScheme : preferences.appearance;
-  const dark = effectiveScheme === 'dark';
-
+function AuthenticatedApp() {
   return (
     <AuthProvider>
-      <AuthenticatedNavigation dark={dark} />
+      <AppNavigation />
     </AuthProvider>
   );
 }
@@ -89,7 +80,7 @@ export default function RootLayout() {
   return (
     <AppErrorBoundary>
       <PreferencesProvider>
-        <AppNavigation />
+        <AuthenticatedApp />
       </PreferencesProvider>
     </AppErrorBoundary>
   );
