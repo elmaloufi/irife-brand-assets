@@ -234,3 +234,12 @@ model AuditEvent {
   @@index([resourceType, resourceId, createdAt])
   @@index([requestId])
 }
+
+model AuthRateLimitBucket {
+  keyHash         String   @id @db.Char(64)
+  windowStartedAt DateTime @db.Timestamptz(3)
+  requestCount    Int      @default(0)
+  expiresAt       DateTime @db.Timestamptz(3)
+
+  @@index([expiresAt])
+}
