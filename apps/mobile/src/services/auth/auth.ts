@@ -1,5 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 import { ApiClientError, apiRequest } from '../api/client';
+import { isUnauthorizedApiError } from './session-error.mjs';
 
 const SESSION_KEY = 'irife.auth.session.v1';
 export interface AuthUser { id: string; email: string; displayName: string; role: 'TRAVELER' | 'ADMIN'; }
@@ -53,11 +54,14 @@ export async function refreshSession(current: AuthSession): Promise<AuthSession 
       const rotated = { ...latest, ...tokens };
       await saveSession(rotated);
       return rotated;
-    } catch {
+    } catch (error) {
       // A concurrent request may have completed rotation while this response
       // was failing. Preserve the newer credentials if they are already saved.
       const currentStored = await readStoredSession();
       if (currentStored && currentStored.refreshToken !== latest.refreshToken) return currentStored;
+      // A timeout, offline device, or 5xx response does not prove that the
+      // refresh token is invalid. Keep it so the next request can retry.
+      if (!isUnauthorizedApiError(error)) throw error;
       await clearStoredSession();
       return null;
     } finally {
@@ -97,7 +101,15 @@ export async function restoreSession(session: AuthSession): Promise<AuthSession 
     if (error instanceof ApiClientError && error.status === 401) {
       const refreshed = await refreshSession(session); if (!refreshed) return null;
       try { const user = await getCurrentUser(refreshed); const current = { ...refreshed, user }; await saveSession(current); return current; }
-      catch { await clearStoredSession(); return null; }
+      catch (refreshError) {
+        // Only a confirmed 401 means the refreshed credentials are invalid.
+        // Transient network/server failures must not sign the traveler out.
+        if (isUnauthorizedApiError(refreshError)) {
+          await clearStoredSession();
+          return null;
+        }
+        return refreshed;
+      }
     }
     return session;
   }
