@@ -20,6 +20,23 @@ jobs:
   quality:
     name: Mobile, contracts, and API quality
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://irife:irife_local_dev_only@127.0.0.1:5432/irife?schema=public
+
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: irife
+          POSTGRES_PASSWORD: irife_local_dev_only
+          POSTGRES_DB: irife
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U irife -d irife"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
 
     steps:
       - name: Checkout repository
@@ -31,21 +48,13 @@ jobs:
           node-version: 24
           package-manager-cache: false
 
-      - name: Install workspace dependencies
+      - name: Install workspace dependencies and refresh lockfile
         run: npm install --no-audit --no-fund
 
       - name: Verify Expo SDK 57 native peer versions
         run: npm ls react-native-reanimated react-native-worklets expo-modules-core --workspace=@irife/mobile
 
-      - name: Upload generated npm lockfile
-        uses: actions/upload-artifact@v7
-        with:
-          name: irife-npm-lockfile
-          path: package-lock.json
-          if-no-files-found: error
-          retention-days: 1
-
-      - name: Commit generated npm lockfile to feature branch
+      - name: Commit updated npm lockfile to feature branch
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/feat/')
         run: |
           git add package-lock.json
@@ -57,6 +66,12 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "build: lock npm workspace dependencies"
           git push origin "HEAD:${GITHUB_REF_NAME}"
+
+      - name: Validate Prisma schema
+        run: npm run db:validate
+
+      - name: Apply migrations to clean PostgreSQL
+        run: npm run db:migrate
 
       - name: Run mobile, contract, workspace, and API tests
         run: npm test

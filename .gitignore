@@ -2,6 +2,9 @@
 node_modules/
 **/node_modules/
 
+# Generated Prisma client
+services/api/src/generated/
+
 # Expo / React Native generated files
 .expo/
 **/.expo/

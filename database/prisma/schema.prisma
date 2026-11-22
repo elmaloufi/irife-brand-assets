@@ -1,0 +1,236 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../../services/api/src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  TRAVELER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum ProviderStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+}
+
+enum ProviderRole {
+  OWNER
+  MANAGER
+  STAFF
+}
+
+enum MembershipStatus {
+  INVITED
+  ACTIVE
+  REVOKED
+}
+
+enum CredentialType {
+  ACCESS
+  REFRESH
+}
+
+enum ExperienceStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum EnquiryStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  CANCELLED
+  COMPLETED
+}
+
+model User {
+  id             String                @id @default(uuid()) @db.Uuid
+  email          String                @unique @db.VarChar(320)
+  passwordHash   String                @db.VarChar(255)
+  displayName    String                @db.VarChar(120)
+  role           UserRole              @default(TRAVELER)
+  status         UserStatus            @default(ACTIVE)
+  createdAt      DateTime              @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime              @updatedAt @db.Timestamptz(3)
+  sessions       Session[]
+  memberships    ProviderMembership[]
+  enquiries      Enquiry[]
+  auditEvents    AuditEvent[]
+  enquiryActions EnquiryStatusHistory[]
+
+  @@index([status, createdAt])
+}
+
+model Session {
+  id          String              @id @default(uuid()) @db.Uuid
+  userId      String              @db.Uuid
+  familyId    String              @db.Uuid
+  createdAt   DateTime            @default(now()) @db.Timestamptz(3)
+  lastUsedAt  DateTime?           @db.Timestamptz(3)
+  revokedAt   DateTime?           @db.Timestamptz(3)
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  credentials SessionCredential[]
+
+  @@index([userId, revokedAt])
+  @@index([familyId])
+}
+
+model SessionCredential {
+  id         String         @id @default(uuid()) @db.Uuid
+  sessionId  String         @db.Uuid
+  tokenHash  String         @unique @db.Char(64)
+  type       CredentialType
+  expiresAt  DateTime       @db.Timestamptz(3)
+  consumedAt DateTime?      @db.Timestamptz(3)
+  revokedAt  DateTime?      @db.Timestamptz(3)
+  createdAt  DateTime       @default(now()) @db.Timestamptz(3)
+  session    Session        @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, type, expiresAt])
+  @@index([expiresAt])
+}
+
+model Provider {
+  id          String                @id @default(uuid()) @db.Uuid
+  name        String                @db.VarChar(160)
+  slug        String                @unique @db.VarChar(120)
+  status      ProviderStatus        @default(PENDING)
+  createdAt   DateTime              @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime              @updatedAt @db.Timestamptz(3)
+  memberships ProviderMembership[]
+  experiences Experience[]
+  enquiries   Enquiry[]
+
+  @@index([status, createdAt])
+}
+
+model ProviderMembership {
+  id         String           @id @default(uuid()) @db.Uuid
+  providerId String           @db.Uuid
+  userId     String           @db.Uuid
+  role       ProviderRole
+  status     MembershipStatus @default(INVITED)
+  createdAt  DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime         @updatedAt @db.Timestamptz(3)
+  provider   Provider         @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, userId])
+  @@index([userId, status])
+  @@index([providerId, status])
+}
+
+model Destination {
+  id          String       @id @default(uuid()) @db.Uuid
+  slug        String       @unique @db.VarChar(120)
+  name        String       @db.VarChar(160)
+  countryCode String       @default("MA") @db.Char(2)
+  region      String?      @db.VarChar(120)
+  summary     String?      @db.Text
+  isPublished Boolean      @default(false)
+  createdAt   DateTime     @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime     @updatedAt @db.Timestamptz(3)
+  experiences Experience[]
+
+  @@index([countryCode, isPublished, name])
+}
+
+model Experience {
+  id              String           @id @default(uuid()) @db.Uuid
+  providerId      String           @db.Uuid
+  destinationId   String           @db.Uuid
+  slug            String           @db.VarChar(120)
+  title           String           @db.VarChar(180)
+  summary         String?          @db.VarChar(500)
+  description     String           @db.Text
+  currency        String           @default("MAD") @db.Char(3)
+  priceFrom       Decimal?         @db.Decimal(10, 2)
+  durationMinutes Int?
+  maxGroupSize    Int?
+  status          ExperienceStatus @default(DRAFT)
+  createdAt       DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime         @updatedAt @db.Timestamptz(3)
+  provider        Provider         @relation(fields: [providerId], references: [id], onDelete: Restrict)
+  destination     Destination      @relation(fields: [destinationId], references: [id], onDelete: Restrict)
+  enquiries       Enquiry[]
+  media           ExperienceMedia[]
+
+  @@unique([providerId, slug])
+  @@index([destinationId, status, createdAt])
+  @@index([providerId, status, createdAt])
+}
+
+model ExperienceMedia {
+  id           String     @id @default(uuid()) @db.Uuid
+  experienceId String     @db.Uuid
+  url          String     @db.VarChar(2048)
+  altText      String?    @db.VarChar(300)
+  position     Int        @default(0)
+  createdAt    DateTime   @default(now()) @db.Timestamptz(3)
+  experience   Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+
+  @@index([experienceId, position])
+}
+
+model Enquiry {
+  id               String        @id @default(uuid()) @db.Uuid
+  travelerId       String        @db.Uuid
+  providerId       String        @db.Uuid
+  experienceId     String        @db.Uuid
+  requestedStartAt DateTime?     @db.Timestamptz(3)
+  guestCount       Int           @default(1)
+  message          String        @db.VarChar(2000)
+  status           EnquiryStatus @default(PENDING)
+  createdAt        DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime      @updatedAt @db.Timestamptz(3)
+  traveler         User          @relation(fields: [travelerId], references: [id], onDelete: Restrict)
+  provider         Provider      @relation(fields: [providerId], references: [id], onDelete: Restrict)
+  experience       Experience    @relation(fields: [experienceId], references: [id], onDelete: Restrict)
+  history          EnquiryStatusHistory[]
+
+  @@index([travelerId, createdAt])
+  @@index([providerId, status, createdAt])
+  @@index([experienceId, status])
+}
+
+model EnquiryStatusHistory {
+  id          String        @id @default(uuid()) @db.Uuid
+  enquiryId   String        @db.Uuid
+  actorUserId String?       @db.Uuid
+  fromStatus  EnquiryStatus?
+  toStatus    EnquiryStatus
+  note        String?       @db.VarChar(500)
+  createdAt   DateTime      @default(now()) @db.Timestamptz(3)
+  enquiry     Enquiry       @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
+  actor       User?         @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([enquiryId, createdAt])
+  @@index([actorUserId, createdAt])
+}
+
+model AuditEvent {
+  id           String   @id @default(uuid()) @db.Uuid
+  actorUserId  String?  @db.Uuid
+  action       String   @db.VarChar(120)
+  resourceType String   @db.VarChar(120)
+  resourceId   String?  @db.VarChar(120)
+  requestId    String?  @db.VarChar(120)
+  metadata     Json?
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+  actor        User?    @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([actorUserId, createdAt])
+  @@index([resourceType, resourceId, createdAt])
+  @@index([requestId])
+}
