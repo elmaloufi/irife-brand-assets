@@ -6,7 +6,7 @@
 
 **Architecture:** Keep Expo Router as the navigation source of truth. Add a small shared design system and reusable UI primitives; create explicit Map and AI Guide entry screens that clearly communicate preview/connection status until their backend integrations are implemented. Preserve the Requests screen and make it reachable from Account.
 
-**Tech Stack:** Expo SDK 57, Expo Router, React Native 0.86, TypeScript, `@react-native-vector-icons/ionicons`, existing theme and safe-area components.
+**Tech Stack:** Expo SDK 57, Expo Router, React Native 0.86, TypeScript, `@react-native-vector-icons/ionicons`, Expo Font, existing theme and safe-area components.
 
 **Spec:** `docs/product/IRIFE-SMART-JOURNEY-DESIGN.md`
 
@@ -44,12 +44,12 @@
 - Produces shared `theme.colors`, `theme.radius`, `theme.spacing`, reusable `AppButton` variants, and five primary Expo Router tabs.
 - Consumes existing Expo Router and React Native navigation structure.
 
-- [ ] Add `@react-native-vector-icons/ionicons` as a direct mobile dependency; use its dynamic import so the font loads in Expo Go.
+- [ ] Add `@react-native-vector-icons/ionicons` and Expo SDK 57-compatible `expo-font` as direct mobile dependencies; use dynamic font loading so the icons work in Expo Go.
 - [ ] Update theme tokens to Deep forest `#123B35`, Emerald `#147D6F`, Soft mint `#DCEFE8`, Warm ivory `#FAF8F2`, Sand `#E9DDC8`, Charcoal `#24312F`, Muted slate `#687873`, White `#FFFFFF`, Alert red `#B5413A`.
 - [ ] Add a reusable button with primary, secondary, tertiary, icon-only, and destructive variants; icon-only variant requires an accessibility label.
 - [ ] Replace four text-only tabs with Home, Discover, Map, AI Guide, and Account using consistent vector icons, visible labels, selected-state styling, and safe-area-aware sizing.
 - [ ] Keep Requests registered as a non-tab route so Account can link to it.
-- [ ] Run the mobile TypeScript check and full configured build.
+- [ ] Run navigation configuration tests, the mobile TypeScript check, and the full configured build.
 
 ### Task 2: Account, Requests, and Settings navigation
 

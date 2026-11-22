@@ -1,0 +1,49 @@
+{
+  "name": "@irife/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node dist/main.js",
+    "start:dev": "nest start --watch",
+    "build": "npm run prisma:generate && tsc -p tsconfig.build.json",
+    "typecheck": "npm run prisma:generate && tsc -p tsconfig.json --noEmit",
+    "test": "npm run prisma:generate && NODE_OPTIONS=--experimental-vm-modules jest --config ./jest.config.cjs --runInBand",
+    "test:e2e": "NODE_OPTIONS=--experimental-vm-modules jest --config ./jest-e2e.config.cjs --runInBand",
+    "prisma:generate": "prisma generate --config ../../prisma.config.ts",
+    "db:validate": "prisma validate --config ../../prisma.config.ts",
+    "db:status": "prisma migrate status --config ../../prisma.config.ts",
+    "db:migrate": "prisma migrate deploy --config ../../prisma.config.ts",
+    "db:migrate:dev": "prisma migrate dev --config ../../prisma.config.ts"
+  },
+  "dependencies": {
+    "@nestjs/common": "12.6.0",
+    "@nestjs/config": "12.1.1",
+    "@nestjs/core": "12.6.0",
+    "@nestjs/platform-express": "12.6.0",
+    "@nestjs/swagger": "12.1.2",
+    "@prisma/adapter-pg": "7.10.1",
+    "@prisma/client": "7.10.1",
+    "class-transformer": "0.5.1",
+    "class-validator": "0.15.1",
+    "pg": "8.16.3",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2"
+  },
+  "devDependencies": {
+    "@jest/globals": "30.5.2",
+    "@nestjs/cli": "12.0.15",
+    "@nestjs/testing": "12.6.0",
+    "@swc/core": "1.16.22",
+    "@swc/jest": "0.2.39",
+    "@types/express": "5.0.6",
+    "@types/node": "22.20.5",
+    "@types/pg": "8.15.5",
+    "@types/supertest": "7.2.1",
+    "dotenv": "17.2.3",
+    "jest": "30.5.2",
+    "prisma": "7.10.1",
+    "supertest": "7.3.2",
+    "typescript": "6.0.3"
+  }
+}
