@@ -7,10 +7,11 @@ import {
   Platform,
   Pressable,
   StyleSheet,
-  Text,
+  Text as NativeText,
   TextInput,
   View,
 } from 'react-native';
+import { AppText as Text } from '../../src/components/AppText';
 import { useAuth } from '../../src/auth/AuthProvider';
 import { ScreenContainer } from '../../src/components/ScreenContainer';
 import { theme } from '../../src/theme';
