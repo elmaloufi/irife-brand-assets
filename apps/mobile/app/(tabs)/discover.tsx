@@ -6,7 +6,6 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  Text as NativeText,
   View,
 } from 'react-native';
 import { AppText as Text } from '../../src/components/AppText';
