@@ -9,6 +9,8 @@ import type { AuthenticatedUser } from './identity.types.js';
 
 const ACCESS_TTL_MS = 15 * 60 * 1000;
 const REFRESH_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+// Equalize expensive password verification for unknown and known email addresses.
+const DUMMY_PASSWORD_HASH = hashPassword('IRIFE-authentication-timing-dummy-secret');
 
 @Injectable()
 export class IdentityService {
@@ -37,7 +39,9 @@ export class IdentityService {
       where: { email: input.email.trim().toLowerCase() },
       select: { id: true, email: true, displayName: true, role: true, status: true, passwordHash: true },
     });
-    if (!user || user.status !== 'ACTIVE' || !(await verifyPassword(input.password, user.passwordHash))) {
+    const passwordHash = user?.passwordHash ?? await DUMMY_PASSWORD_HASH;
+    const passwordMatches = await verifyPassword(input.password, passwordHash);
+    if (!user || user.status !== 'ACTIVE' || !passwordMatches) {
       throw new UnauthorizedException({ code: 'INVALID_CREDENTIALS', message: 'Email or password is incorrect.' });
     }
     const { status: _status, passwordHash: _passwordHash, ...safeUser } = user;

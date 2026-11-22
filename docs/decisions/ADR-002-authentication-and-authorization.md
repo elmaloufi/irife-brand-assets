@@ -35,7 +35,8 @@ Use **opaque, random bearer tokens backed by server-side sessions in PostgreSQL*
 - Passwords are never stored in plaintext or reversibly encrypted.
 - The initial backend slice uses Node.js built-in **scrypt** with a random 128-bit salt, cost N=32768, r=8, p=1, a 64-byte derived key, and a 64 MiB memory ceiling. Verification uses constant-time comparison.
 - This implementation choice avoids introducing an unverified native addon into the mobile-adjacent monorepo. Before public launch, benchmark scrypt on the intended API host and reassess Argon2id; any algorithm change must support versioned hashes and a safe rehash-on-login migration.
-- Authentication endpoints must receive distributed rate limiting before public exposure. The initial local-only slice does not claim production-ready abuse protection.
+- Apply conservative per-source rate limits to registration (3/hour), login (5/15 minutes), and refresh (20/minute), with `Retry-After` and rate-limit headers.
+- The current guard is process-local and is only a development/staging safety layer. Before any multi-instance or public deployment, replace its in-memory buckets with a shared Redis-backed limiter and configure trusted proxy boundaries. Do not expose the API publicly until this release gate is met.
 - Authentication responses must not disclose whether an account exists. Account recovery, email/SMS verification, social sign-in, and multi-factor authentication are not part of this foundation and require separate product/security decisions before implementation.
 
 ### Roles and provider membership
