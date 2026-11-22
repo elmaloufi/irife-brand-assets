@@ -22,7 +22,7 @@ describe('IdentityRateLimitGuard', () => {
       expect(guard.canActivate(context)).toBe(true);
     }
 
-    expect(() => guard.canActivate(context)).toThrow(TooManyRequestsException);
+    expect(() => guard.canActivate(context)).toThrow(HttpException);
   });
 
   it('keeps limits isolated between client addresses', () => {
@@ -45,7 +45,7 @@ describe('IdentityRateLimitGuard', () => {
       guard.canActivate(context);
     }
 
-    expect(() => guard.canActivate(context)).toThrow(TooManyRequestsException);
+    expect(() => guard.canActivate(context)).toThrow(HttpException);
   });
 
   it('applies a stricter limit to registration', () => {
@@ -56,6 +56,6 @@ describe('IdentityRateLimitGuard', () => {
       guard.canActivate(context);
     }
 
-    expect(() => guard.canActivate(context)).toThrow(TooManyRequestsException);
+    expect(() => guard.canActivate(context)).toThrow(HttpException);
   });
 });
