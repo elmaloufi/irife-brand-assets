@@ -3,10 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "workspaces": [
-    "apps/mobile"
+    "apps/mobile",
+    "packages/contracts"
   ],
   "scripts": {
-    "build": "npm run typecheck --workspace=@irife/mobile",
-    "test": "node --test apps/mobile/src/navigation/tabs.test.mjs"
+    "build": "npm run build --workspace=@irife/contracts && npm run typecheck --workspace=@irife/mobile",
+    "test": "node --test apps/mobile/src/navigation/tabs.test.mjs && npm run test --workspace=@irife/contracts"
   }
 }
