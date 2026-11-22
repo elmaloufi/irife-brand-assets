@@ -12,6 +12,7 @@ on:
 permissions:
   contents: read
   security-events: write
+  checks: read
   packages: read
 
 jobs:
@@ -43,31 +44,29 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const { data } = await github.rest.codeScanning.listAlertsForRepo({
+            const { data: checkData } = await github.rest.checks.listForRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              state: 'open',
-              ref: `refs/heads/${context.payload.pull_request.head.ref}`,
-              tool_name: 'CodeQL',
+              ref: context.payload.pull_request.head.sha,
               per_page: 100,
             });
-            const alerts = data.map((alert) => ({
-              number: alert.number,
-              rule: alert.rule.id,
-              severity: alert.rule.security_severity_level,
-              message: alert.most_recent_instance?.message?.text,
-              path: alert.most_recent_instance?.location?.path,
-              start_line: alert.most_recent_instance?.location?.start_line,
-              html_url: alert.html_url,
-            }));
-            core.info('Open CodeQL alerts for PR head branch:');
-            core.info(JSON.stringify(alerts, null, 2));
-            const all = await github.rest.codeScanning.listAlertsForRepo({
+            const codeql = checkData.check_runs.find((run) => run.name === 'CodeQL');
+            if (!codeql) {
+              core.warning('No CodeQL summary check run was found for this commit.');
+              return;
+            }
+            const { data: annotations } = await github.rest.checks.listAnnotations({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              state: 'open',
-              tool_name: 'CodeQL',
+              check_run_id: codeql.id,
               per_page: 100,
             });
-            core.info('All open CodeQL alerts in repository:');
-            core.info(JSON.stringify(all.data.map((alert) => ({ number: alert.number, rule: alert.rule.id, severity: alert.rule.security_severity_level, message: alert.most_recent_instance?.message?.text, path: alert.most_recent_instance?.location?.path, start_line: alert.most_recent_instance?.location?.start_line, html_url: alert.html_url })), null, 2));
+            core.info(JSON.stringify(annotations.map((annotation) => ({
+              path: annotation.path,
+              start_line: annotation.start_line,
+              end_line: annotation.end_line,
+              level: annotation.annotation_level,
+              message: annotation.message,
+              title: annotation.title,
+              raw_details: annotation.raw_details,
+            })), null, 2));
