@@ -1,9 +1,10 @@
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Link, router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '../src/auth/AuthProvider';
 import { ScreenContainer } from '../src/components/ScreenContainer';
+import { signOutAndNavigate } from '../src/auth/sign-out-navigation.mjs';
 import {
   DEFAULT_PREFERENCES,
   loadPreferences,
@@ -147,7 +148,7 @@ export default function SettingsScreen() {
             <Ionicons name="chevron-forward" size={18} color={theme.colors.secondary} />
           </Pressable>
         </Link>
-        {user ? <Pressable accessibilityRole="button" disabled={isSubmitting} onPress={() => void signOut().then(() => router.replace('/(tabs)/profile'))} style={styles.signOut}><Ionicons name="log-out-outline" size={17} color={theme.colors.danger} /><Text style={styles.signOutText}>{isSubmitting ? 'Signing out…' : 'Sign out of this device'}</Text></Pressable> : null}
+        {user ? <Pressable accessibilityRole="button" disabled={isSubmitting} onPress={() => void signOutAndNavigate(signOut, () => router.replace('/(tabs)/profile'), () => Alert.alert('Sign-out could not be confirmed', 'Your local session was cleared, but the server could not confirm revocation. Reconnect and review active sessions.'))} style={styles.signOut}><Ionicons name="log-out-outline" size={17} color={theme.colors.danger} /><Text style={styles.signOutText}>{isSubmitting ? 'Signing out…' : 'Sign out of this device'}</Text></Pressable> : null}
       </View>
 
       <View style={styles.footer}>
