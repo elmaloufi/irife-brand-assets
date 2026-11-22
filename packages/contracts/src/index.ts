@@ -7,3 +7,4 @@ export {
   HEALTH_SERVICE,
 } from './health/health-response.js';
 export type { HealthResponse } from './health/health-response.js';
+export type { PaginatedResponse, DestinationSummary, ExperienceCard, ExperienceDetail } from './discovery/discovery.js';
