@@ -52,7 +52,7 @@ export class IdentityService {
   }
 
   async updateProfile(userId: string, displayName: string) {
-    const normalizedName = displayName.trim().replace(/\\s+/g, ' ');
+    const normalizedName = displayName.trim().replace(/\s+/g, ' ');
     if (normalizedName.length < 2 || normalizedName.length > 120) {
       throw new BadRequestException({ code: 'INVALID_DISPLAY_NAME', message: 'Display name must be between 2 and 120 characters.' });
     }

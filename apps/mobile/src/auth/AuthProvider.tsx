@@ -127,6 +127,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     signIn,
     signUp,
     signOut,
+    updateProfile,
     clearError: () => setError(null),
   }), [session, isLoading, isSubmitting, error, signIn, signUp, signOut, updateProfile]);
 
