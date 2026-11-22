@@ -1,7 +1,7 @@
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Link, router } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text as NativeText, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { AppText as Text } from '../../src/components/AppText';
 import { ScreenContainer } from '../../src/components/ScreenContainer';
 import { completePasswordReset, requestPasswordReset } from '../../src/services/auth/auth';
