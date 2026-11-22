@@ -1,6 +1,5 @@
 import { Component, type ReactNode } from 'react';
-import { Pressable, SafeAreaView, StyleSheet, View } from 'react-native';
-import { AppText as Text } from './AppText';
+import { Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { theme } from '../theme';
 
 interface AppErrorBoundaryProps {
