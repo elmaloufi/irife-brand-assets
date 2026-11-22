@@ -80,7 +80,7 @@ export default function SettingsScreen() {
         </Link>
         <Text style={styles.eyebrow}>MAKE IRIFE YOURS</Text>
         <Text style={styles.title}>{t('settings')}</Text>
-        <Text style={styles.subtitle}>Your language, currency and travel preferences, saved on this device.</Text>
+        <Text style={styles.subtitle}>Your language, country, currency and travel preferences · {locale}</Text>
       </View>
 
       {loading ? (
@@ -91,6 +91,13 @@ export default function SettingsScreen() {
             <Text style={styles.sectionTitle}>{t('travelPreferences')}</Text>
             <View style={styles.group}>
               <PreferenceGroup<AppLanguage> title={t('appLanguage')} description={t('chooseLanguage')} value={preferences.language} choices={[{value:'en',label:t('english')},{value:'fr',label:t('french')},{value:'ar',label:t('arabic')}] } onChange={(value) => void update('language', value)} />
+              <View style={styles.separator} />
+              <PreferenceGroup<string> title={t('region')} description={t('regionDescription')} value={preferences.region} choices={[
+                {value:'MA',label:'Morocco'},{value:'FR',label:'France'},{value:'ES',label:'Spain'},
+                {value:'GB',label:'United Kingdom'},{value:'US',label:'United States'},{value:'CA',label:'Canada'},
+                {value:'DE',label:'Germany'},{value:'NL',label:'Netherlands'},{value:'AE',label:'United Arab Emirates'},
+                {value:'SA',label:'Saudi Arabia'},{value:'BE',label:'Belgium'},
+              ]} onChange={(value) => void update('region', value)} />
               <View style={styles.separator} />
               <PreferenceGroup<AppCurrency> title={t('currency')} description={t('currencyDescription')} value={preferences.currency} choices={[{value:'MAD',label:'MAD'},{value:'EUR',label:'EUR'},{value:'USD',label:'USD'}]} onChange={(value) => void update('currency', value)} />
               <View style={styles.separator} />
