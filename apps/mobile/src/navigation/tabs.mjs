@@ -35,3 +35,8 @@ export const tabs = [
     activeIcon: "person",
   },
 ];
+
+export const tabPerformanceOptions = {
+  lazy: true,
+  freezeOnBlur: true,
+};
