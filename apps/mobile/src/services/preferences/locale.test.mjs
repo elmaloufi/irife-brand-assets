@@ -5,7 +5,11 @@ import { formatCurrency, formatDistance, isRightToLeft, normalizeLanguage, resol
 test('normalizes language tags and falls back safely', () => {
   assert.equal(normalizeLanguage('ar-MA'), 'ar');
   assert.equal(normalizeLanguage('fr_FR'), 'fr');
-  assert.equal(normalizeLanguage('pt-BR'), 'en');
+  assert.equal(normalizeLanguage('pt-BR'), 'pt');
+  assert.equal(normalizeLanguage('zh-CN'), 'zh');
+  assert.equal(normalizeLanguage('ja-JP'), 'ja');
+  assert.equal(normalizeLanguage('nl-NL'), 'nl');
+  assert.equal(normalizeLanguage('xx-XX'), 'en');
 });
 
 test('resolves regional locales and text direction', () => {
@@ -20,6 +24,9 @@ test('returns translated strings with an English fallback', () => {
   assert.equal(translate('ar', 'settings'), 'الإعدادات');
   assert.equal(translate('fr', 'settings'), 'Paramètres');
   assert.equal(translate('fr', 'missing-key'), 'missing-key');
+  assert.equal(translate('es', 'settings'), 'Ajustes');
+  assert.equal(translate('zh', 'settings'), '设置');
+  assert.equal(translate('de', 'settings'), 'Einstellungen');
 });
 
 test('formats currencies and distances using Intl', () => {
