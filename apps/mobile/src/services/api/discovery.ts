@@ -1,3 +1,4 @@
+import { cachedRequest } from './request-cache.mjs';
 import type {
   DestinationSummary,
   ExperienceCard,
@@ -22,17 +23,18 @@ function toQueryString(query: DiscoveryQuery): string {
 export function getDestinations(
   query: Pick<DiscoveryQuery, 'page' | 'limit'> = {},
 ): Promise<PaginatedResponse<DestinationSummary>> {
-  return apiRequest(`/api/v1/destinations?${toQueryString(query)}`);
+  const path = `/api/v1/destinations?${toQueryString(query)}`;
+  return cachedRequest(path, () => apiRequest(path), 30_000);
 }
 
 export function getExperiences(
   query: DiscoveryQuery = {},
 ): Promise<PaginatedResponse<ExperienceCard>> {
-  return apiRequest(`/api/v1/experiences?${toQueryString(query)}`);
+  const path = `/api/v1/experiences?${toQueryString(query)}`;
+  return cachedRequest(path, () => apiRequest(path), 30_000);
 }
 
 export async function getExperienceById(id: string) {
-  return apiRequest<import('@irife/contracts').ExperienceDetail>(
-    `/api/v1/experiences/${encodeURIComponent(id)}`,
-  );
+  const path = `/api/v1/experiences/${encodeURIComponent(id)}`;
+  return cachedRequest(path, () => apiRequest<import('@irife/contracts').ExperienceDetail>(path), 60_000);
 }
