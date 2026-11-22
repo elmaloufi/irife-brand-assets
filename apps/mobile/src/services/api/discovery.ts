@@ -30,3 +30,9 @@ export function getExperiences(
 ): Promise<PaginatedResponse<ExperienceCard>> {
   return apiRequest(`/api/v1/experiences?${toQueryString(query)}`);
 }
+
+export async function getExperienceById(id: string) {
+  return apiRequest<import('@irife/contracts').ExperienceDetail>(
+    `/api/v1/experiences/${encodeURIComponent(id)}`,
+  );
+}
