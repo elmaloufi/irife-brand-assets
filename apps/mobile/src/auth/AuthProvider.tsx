@@ -8,7 +8,6 @@ import {
   type PropsWithChildren,
 } from 'react';
 import {
-  clearStoredSession,
   readStoredSession,
   restoreSession,
   signIn as requestSignIn,
@@ -18,6 +17,7 @@ import {
   type AuthSession,
   type AuthUser,
 } from '../services/auth/auth';
+import { restoreSessionWithFallback } from './restore-session-fallback.mjs';
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -51,10 +51,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
       try {
         const stored = await readStoredSession();
         if (!stored) return;
-        const restored = await restoreSession(stored);
+        const restored = await restoreSessionWithFallback(stored, restoreSession);
         if (active) setSession(restored);
       } catch {
-        await clearStoredSession();
+        // SecureStore read failures are not evidence that a server session was
+        // revoked. Do not delete credentials on a transient startup failure.
       } finally {
         if (active) setIsLoading(false);
       }
