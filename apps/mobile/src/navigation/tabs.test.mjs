@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { tabs } from "./tabs.mjs";
+import { tabs, tabPerformanceOptions } from "./tabs.mjs";
 
 test("IRIFE exposes exactly five primary destinations in product order", () => {
   assert.deepEqual(
@@ -29,4 +29,10 @@ test("each primary destination defines distinct inactive and active icons", () =
 test("Requests is not a primary tab and remains an account destination", () => {
   assert.equal(tabs.some(({ route }) => route === "requests"), false);
   assert.ok(tabs.some(({ route }) => route === "profile"));
+});
+
+
+test("inactive tabs are lazy-loaded and frozen after blur", () => {
+  assert.equal(tabPerformanceOptions.lazy, true);
+  assert.equal(tabPerformanceOptions.freezeOnBlur, true);
 });
