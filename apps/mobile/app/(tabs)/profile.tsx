@@ -1,6 +1,7 @@
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Link, router } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../../src/auth/AuthProvider';
 import { ScreenContainer } from '../../src/components/ScreenContainer';
 import { theme } from '../../src/theme';
@@ -31,7 +32,18 @@ function AccountRow({
 }
 
 export default function ProfileScreen() {
-  const { user, isLoading, signOut, isSubmitting } = useAuth();
+  const { user, isLoading, signOut, updateProfile, isSubmitting } = useAuth();
+  const [editingName, setEditingName] = useState(false);
+  const [displayName, setDisplayName] = useState('');
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [profileSaved, setProfileSaved] = useState(false);
+  useEffect(() => { setDisplayName(user?.displayName ?? ''); }, [user?.displayName]);
+  async function saveName() {
+    setProfileError(null); setProfileSaved(false);
+    if (displayName.trim().length < 2 || displayName.trim().length > 120) { setProfileError('Name must be between 2 and 120 characters.'); return; }
+    try { await updateProfile(displayName); setEditingName(false); setProfileSaved(true); }
+    catch (cause) { setProfileError(cause instanceof Error ? cause.message : 'Could not update your profile.'); }
+  }
 
   return (
     <ScreenContainer>
@@ -44,11 +56,14 @@ export default function ProfileScreen() {
       <View style={styles.profileCard}>
         <View style={styles.avatar}><Ionicons name="person" size={28} color={theme.colors.primaryDark} /></View>
         <View style={styles.profileCopy}>
-          <Text style={styles.profileTitle}>{isLoading ? 'Loading your account…' : user?.displayName ?? 'Welcome to IRIFE'}</Text>
+          {editingName ? <TextInput accessibilityLabel="Display name" autoCapitalize="words" value={displayName} onChangeText={setDisplayName} style={styles.nameInput} maxLength={120} /> : <Text style={styles.profileTitle}>{isLoading ? 'Loading your account…' : user?.displayName ?? 'Welcome to IRIFE'}</Text>}
           <Text style={styles.profileSubtitle}>{user?.email ?? (isLoading ? 'Checking your secure session' : 'Sign in to save your travel world in one place.')}</Text>
         </View>
-        <View style={styles.previewBadge}><Text style={styles.previewBadgeText}>{user ? 'TRAVELER' : 'GUEST'}</Text></View>
+        {user ? <Pressable accessibilityRole="button" onPress={() => { setEditingName((value) => !value); setProfileError(null); }} style={styles.editButton}><Ionicons name={editingName ? 'close' : 'pencil'} size={15} color={theme.colors.primaryDark} /><Text style={styles.editButtonText}>{editingName ? 'Cancel' : 'Edit'}</Text></Pressable> : <View style={styles.previewBadge}><Text style={styles.previewBadgeText}>GUEST</Text></View>}
       </View>
+
+      {editingName && user ? <View style={styles.editPanel}><Text style={styles.editHint}>Update the name shown on your traveler profile. Email changes require verification and are not enabled yet.</Text>{profileError ? <Text accessibilityRole="alert" style={styles.profileError}>{profileError}</Text> : null}<Pressable accessibilityRole="button" disabled={isSubmitting} onPress={() => void saveName()} style={[styles.saveButton,isSubmitting&&styles.disabled]}><Text style={styles.saveButtonText}>{isSubmitting?'Saving…':'Save profile name'}</Text></Pressable></View> : null}
+      {profileSaved ? <Text style={styles.profileSuccess}>Profile updated successfully.</Text> : null}
 
       {!isLoading && !user ? (
         <View style={styles.authCard}>
@@ -103,6 +118,16 @@ const styles = StyleSheet.create({
   profileCopy: { flex: 1, gap: 4 },
   profileTitle: { color: theme.colors.primaryDark, fontSize: 15, fontWeight: '900' },
   profileSubtitle: { color: theme.colors.secondary, fontSize: 11, lineHeight: 16 },
+  nameInput: { color: theme.colors.primaryDark, fontSize: 14, fontWeight: '900', paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: theme.colors.primary },
+  editButton: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 9, paddingVertical: 7, borderRadius: 11, backgroundColor: theme.colors.white },
+  editButtonText: { color: theme.colors.primaryDark, fontSize: 9, fontWeight: '900' },
+  editPanel: { gap: 10, padding: 14, borderRadius: 16, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border },
+  editHint: { color: theme.colors.secondary, fontSize: 10, lineHeight: 15 },
+  profileError: { color: theme.colors.danger, fontSize: 10 },
+  profileSuccess: { color: theme.colors.primary, fontSize: 10, fontWeight: '800' },
+  saveButton: { minHeight: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 12, backgroundColor: theme.colors.primaryDark },
+  saveButtonText: { color: theme.colors.white, fontSize: 11, fontWeight: '900' },
+  disabled: { opacity: 0.5 },
   previewBadge: { paddingHorizontal: 8, paddingVertical: 5, borderRadius: theme.radius.pill, backgroundColor: theme.colors.white },
   previewBadgeText: { color: theme.colors.primaryDark, fontSize: 8, fontWeight: '900', letterSpacing: 0.8 },
   authCard: { gap: 10, padding: 17, borderRadius: 20, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border },

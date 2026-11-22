@@ -51,6 +51,18 @@ export class IdentityService {
     return this.createSession(safeUser);
   }
 
+  async updateProfile(userId: string, displayName: string) {
+    const normalizedName = displayName.trim().replace(/\\s+/g, ' ');
+    if (normalizedName.length < 2 || normalizedName.length > 120) {
+      throw new BadRequestException({ code: 'INVALID_DISPLAY_NAME', message: 'Display name must be between 2 and 120 characters.' });
+    }
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { displayName: normalizedName },
+      select: { id: true, email: true, displayName: true, role: true },
+    });
+  }
+
   async validateAccessToken(token: string): Promise<AuthenticatedUser> {
     const credential = await this.prisma.sessionCredential.findUnique({
       where: { tokenHash: hashToken(token) },
