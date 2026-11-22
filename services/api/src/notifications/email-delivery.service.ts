@@ -22,7 +22,6 @@ export class EmailDeliveryService {
           to: [email],
           subject: 'Reset your IRIFE password',
           text: `We received a request to reset your IRIFE password. Enter this one-time reset code in the IRIFE app within 30 minutes: ${token}. If you did not request this, you can ignore this email.`,
-          html: `<p>We received a request to reset your IRIFE password.</p><p>Enter this one-time reset code in the IRIFE app:</p><p><strong>${token}</strong></p><p>This code expires in 30 minutes. If you did not request this, you can ignore this email.</p>`,
         }),
         signal: AbortSignal.timeout(10_000),
       });
