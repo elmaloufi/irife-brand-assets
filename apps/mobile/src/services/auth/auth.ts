@@ -69,6 +69,18 @@ export async function refreshSession(current: AuthSession): Promise<AuthSession 
 export async function getCurrentUser(session: AuthSession): Promise<AuthUser> {
   return apiRequest<AuthUser>('/api/v1/identity/me', { headers: { Authorization: `Bearer ${session.accessToken}` } });
 }
+export async function updateAccountProfile(displayName: string): Promise<AuthSession> {
+  const current = await readStoredSession();
+  if (!current) throw new ApiClientError('Sign in to update your profile.', 401, 'AUTHENTICATION_REQUIRED');
+  const user = await authenticatedApiRequest<AuthUser>('/api/v1/identity/me', {
+    method: 'PATCH', body: JSON.stringify({ displayName: displayName.trim() }),
+  });
+  const latest = await readStoredSession();
+  const next = { ...(latest ?? current), user };
+  await saveSession(next);
+  return next;
+}
+
 export async function getAccountSessions(session: AuthSession): Promise<AccountSession[]> {
   return authenticatedApiRequest<AccountSession[]>('/api/v1/identity/sessions', { headers: { Authorization: `Bearer ${session.accessToken}` } });
 }

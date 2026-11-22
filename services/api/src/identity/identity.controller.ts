@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AccessTokenGuard } from './access-token.guard.js';
 import { CurrentUser } from './current-user.decorator.js';
 import { IdentityService } from './identity.service.js';
 import { IdentityRateLimitGuard } from './identity-rate-limit.guard.js';
 import { ChangePasswordDto } from './dto/change-password.dto.js';
+import { UpdateProfileDto } from './dto/update-profile.dto.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RefreshDto } from './dto/refresh.dto.js';
 import { RegisterDto } from './dto/register.dto.js';
@@ -41,6 +42,13 @@ export class IdentityController {
   me(@CurrentUser() user: AuthenticatedUser) {
     const { sessionId: _sessionId, ...safeUser } = user;
     return safeUser;
+  }
+
+  @Patch('me')
+  @ApiBearerAuth()
+  @UseGuards(AccessTokenGuard)
+  updateProfile(@CurrentUser() user: AuthenticatedUser, @Body() body: UpdateProfileDto) {
+    return this.identity.updateProfile(user.id, body.displayName);
   }
 
   @Get('sessions')
