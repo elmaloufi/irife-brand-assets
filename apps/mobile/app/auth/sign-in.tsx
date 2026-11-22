@@ -96,7 +96,7 @@ export default function SignInScreen() {
                 </View>
               </View>
               {error ? <View accessibilityRole="alert" style={styles.error}><Ionicons name="alert-circle-outline" size={17} color={theme.colors.danger} /><Text style={styles.errorText}>{error}</Text></View> : null}
-              <Pressable accessibilityRole="button" disabled={isSubmitting || !email.trim() || password.length === 0} onPress={() => void submit()} style={[styles.submit, (isSubmitting || !email.trim() || password.length < 12) && styles.disabled]}>
+              <Pressable accessibilityRole="button" disabled={isSubmitting || !email.trim() || password.length === 0} onPress={() => void submit()} style={[styles.submit, (isSubmitting || !email.trim() || password.length === 0) && styles.disabled]}>
                 {isSubmitting ? <ActivityIndicator color="#FFFFFF" /> : <><Text style={styles.submitText}>Continue your journey</Text><Ionicons name="arrow-forward" size={18} color="#FFFFFF" /></>}
               </Pressable>
               <View style={styles.privacyNote}><Ionicons name="lock-closed" size={13} color={theme.colors.primary} /><Text style={styles.privacyText}>Your account and personal details stay protected.</Text></View>
