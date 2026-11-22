@@ -7,9 +7,9 @@ import {
   Platform,
   Pressable,
   StyleSheet,
-  TextInput,
   View,
 } from 'react-native';
+import { AppTextInput as TextInput } from '../../src/components/AppTextInput';
 import { AppText as Text } from '../../src/components/AppText';
 import { useAuth } from '../../src/auth/AuthProvider';
 import { ScreenContainer } from '../../src/components/ScreenContainer';
