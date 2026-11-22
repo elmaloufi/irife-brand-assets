@@ -1,81 +1,156 @@
-import { Ionicons } from "@react-native-vector-icons/ionicons";
-import { Link } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
-import { ScreenContainer } from "../src/components/ScreenContainer";
-import { theme } from "../src/theme";
+import { Ionicons } from '@react-native-vector-icons/ionicons';
+import { Link, router } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useAuth } from '../src/auth/AuthProvider';
+import { ScreenContainer } from '../src/components/ScreenContainer';
+import {
+  DEFAULT_PREFERENCES,
+  loadPreferences,
+  savePreferences,
+  type AppAppearance,
+  type AppCurrency,
+  type AppLanguage,
+  type AppPreferences,
+  type DistanceUnit,
+} from '../src/services/preferences/preferences';
+import { theme } from '../src/theme';
 
-const groups = [
-  {
-    title: "App preferences",
-    rows: [
-      { icon: "language-outline" as const, title: "Language", value: "English preview", description: "Arabic and French localization are planned." },
-      { icon: "contrast-outline" as const, title: "Appearance", value: "System default", description: "Theme selection will be saved with your preferences." },
-      { icon: "resize-outline" as const, title: "Distance units", value: "Kilometres", description: "Travel units will be configurable in a later release." },
-    ],
-  },
-  {
-    title: "Privacy and permissions",
-    rows: [
-      { icon: "location-outline" as const, title: "Location access", value: "Not requested", description: "IRIFE will ask only when you choose a location-based feature." },
-      { icon: "notifications-outline" as const, title: "Notifications", value: "Not connected", description: "Notification preferences will appear after push delivery is implemented." },
-      { icon: "shield-checkmark-outline" as const, title: "Privacy and data", value: "Setup pending", description: "Conversation and account data controls will be connected to the privacy API." },
-    ],
-  },
-  {
-    title: "Account security",
-    rows: [
-      { icon: "lock-closed-outline" as const, title: "Sign-in and security", value: "Coming later", description: "Secure account sessions are not enabled in this preview." },
-    ],
-  },
-];
+type Choice<T extends string> = { value: T; label: string };
+
+function PreferenceGroup<T extends string>({
+  title,
+  description,
+  value,
+  choices,
+  onChange,
+}: {
+  title: string;
+  description: string;
+  value: T;
+  choices: Choice<T>[];
+  onChange(value: T): void;
+}) {
+  return (
+    <View style={styles.preferenceBlock}>
+      <View style={styles.preferenceHeading}>
+        <Text style={styles.rowTitle}>{title}</Text>
+        <Text style={styles.description}>{description}</Text>
+      </View>
+      <View style={styles.choices}>
+        {choices.map((choice) => {
+          const selected = choice.value === value;
+          return (
+            <Pressable
+              key={choice.value}
+              accessibilityRole="radio"
+              accessibilityState={{ selected }}
+              onPress={() => onChange(choice.value)}
+              style={[styles.choice, selected && styles.choiceSelected]}
+            >
+              <Text style={[styles.choiceText, selected && styles.choiceTextSelected]}>{choice.label}</Text>
+              {selected ? <Ionicons name="checkmark-circle" size={15} color={theme.colors.white} /> : null}
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
 
 export default function SettingsScreen() {
+  const { user, signOut, isSubmitting } = useAuth();
+  const [preferences, setPreferences] = useState<AppPreferences>(DEFAULT_PREFERENCES);
+  const [loading, setLoading] = useState(true);
+  const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    void loadPreferences().then((value) => {
+      if (active) setPreferences(value);
+    }).catch(() => {
+      if (active) setSaveError('Could not load preferences from secure device storage.');
+    }).finally(() => {
+      if (active) setLoading(false);
+    });
+    return () => { active = false; };
+  }, []);
+
+  async function update<K extends keyof AppPreferences>(key: K, value: AppPreferences[K]) {
+    const next = { ...preferences, [key]: value };
+    setPreferences(next);
+    setSaved(false);
+    setSaveError(null);
+    try {
+      await savePreferences(next);
+      setSaved(true);
+    } catch {
+      setSaveError('Your change could not be saved. Please try again.');
+    }
+  }
+
   return (
     <ScreenContainer>
       <View style={styles.header}>
         <Link href="/(tabs)/profile" asChild>
-          <Pressable style={styles.back}>
-            <Ionicons name="chevron-back" size={19} color={theme.colors.primaryDark} />
-            <Text style={styles.backText}>Account</Text>
-          </Pressable>
+          <Pressable style={styles.back}><Ionicons name="chevron-back" size={19} color={theme.colors.primaryDark} /><Text style={styles.backText}>Account</Text></Pressable>
         </Link>
         <Text style={styles.eyebrow}>MAKE IRIFE YOURS</Text>
         <Text style={styles.title}>Settings</Text>
-        <Text style={styles.subtitle}>
-          Your preferences and privacy controls, in one place.
-        </Text>
+        <Text style={styles.subtitle}>Your language, currency and travel preferences, saved on this device.</Text>
       </View>
 
-      {groups.map((group) => (
-        <View key={group.title} style={styles.section}>
-          <Text style={styles.sectionTitle}>{group.title}</Text>
-          <View style={styles.group}>
-            {group.rows.map((item, index) => (
-              <View key={item.title}>
-                <View style={styles.row}>
-                  <View style={styles.iconWrap}>
-                    <Ionicons name={item.icon} size={19} color={theme.colors.primary} />
-                  </View>
-                  <View style={styles.copy}>
-                    <View style={styles.rowHeading}>
-                      <Text style={styles.rowTitle}>{item.title}</Text>
-                      <Text style={styles.value}>{item.value}</Text>
-                    </View>
-                    <Text style={styles.description}>{item.description}</Text>
-                  </View>
-                </View>
-                {index < group.rows.length - 1 ? <View style={styles.separator} /> : null}
-              </View>
-            ))}
+      {loading ? (
+        <View style={styles.loading}><ActivityIndicator color={theme.colors.primary} /><Text style={styles.description}>Loading your preferences…</Text></View>
+      ) : (
+        <>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Travel preferences</Text>
+            <View style={styles.group}>
+              <PreferenceGroup<AppLanguage> title="App language" description="Choose your preferred language" value={preferences.language} choices={[{value:'en',label:'English'},{value:'fr',label:'Français'},{value:'ar',label:'العربية'}]} onChange={(value) => void update('language', value)} />
+              <View style={styles.separator} />
+              <PreferenceGroup<AppCurrency> title="Preferred currency" description="For displaying experience prices" value={preferences.currency} choices={[{value:'MAD',label:'MAD'},{value:'EUR',label:'EUR'},{value:'USD',label:'USD'}]} onChange={(value) => void update('currency', value)} />
+              <View style={styles.separator} />
+              <PreferenceGroup<DistanceUnit> title="Distance units" description="Used for directions and nearby places" value={preferences.distanceUnit} choices={[{value:'km',label:'Kilometres'},{value:'mi',label:'Miles'}]} onChange={(value) => void update('distanceUnit', value)} />
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Appearance</Text>
+            <View style={styles.group}>
+              <PreferenceGroup<AppAppearance> title="Theme" description="Choose how IRIFE should look" value={preferences.appearance} choices={[{value:'system',label:'System'},{value:'light',label:'Light'},{value:'dark',label:'Dark'}]} onChange={(value) => void update('appearance', value)} />
+            </View>
+          </View>
+        </>
+      )}
+
+      {saved ? <View style={styles.saved}><Ionicons name="checkmark-circle" size={16} color={theme.colors.primary} /><Text style={styles.savedText}>Preferences saved on this device</Text></View> : null}
+      {saveError ? <View style={styles.error}><Ionicons name="alert-circle-outline" size={16} color={theme.colors.danger} /><Text style={styles.errorText}>{saveError}</Text></View> : null}
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Privacy & permissions</Text>
+        <View style={styles.infoRow}><View style={styles.iconWrap}><Ionicons name="location-outline" size={19} color={theme.colors.primary} /></View><View style={styles.copy}><Text style={styles.rowTitle}>Location access</Text><Text style={styles.description}>Not requested. IRIFE asks only when you use a location feature.</Text></View><Text style={styles.status}>OFF</Text></View>
+        <View style={styles.infoRow}><View style={styles.iconWrap}><Ionicons name="notifications-outline" size={19} color={theme.colors.primary} /></View><View style={styles.copy}><Text style={styles.rowTitle}>Notifications</Text><Text style={styles.description}>Push delivery is not connected yet.</Text></View><Text style={styles.status}>OFF</Text></View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Account security</Text>
+        <View style={styles.securityCard}>
+          <View style={styles.iconWrap}><Ionicons name="shield-checkmark-outline" size={20} color={theme.colors.primary} /></View>
+          <View style={styles.copy}>
+            <Text style={styles.rowTitle}>{user ? 'Signed in securely' : 'Guest session'}</Text>
+            <Text style={styles.description}>{user ? user.email : 'Sign in to manage your account security.'}</Text>
+            <Text style={styles.securityHint}>Password changes and device-session management will be enabled after their dedicated API endpoints are added.</Text>
           </View>
         </View>
-      ))}
+        {user ? <Pressable accessibilityRole="button" disabled={isSubmitting} onPress={() => void signOut().then(() => router.replace('/(tabs)/profile'))} style={styles.signOut}><Ionicons name="log-out-outline" size={17} color={theme.colors.danger} /><Text style={styles.signOutText}>{isSubmitting ? 'Signing out…' : 'Sign out of this device'}</Text></Pressable> : null}
+      </View>
 
-      <View style={styles.note}>
-        <Ionicons name="information-circle-outline" size={19} color={theme.colors.primary} />
-        <Text style={styles.noteText}>
-          These settings are a preview. No preference is saved or permission is requested from this screen yet.
-        </Text>
+      <View style={styles.footer}>
+        <Text style={styles.footerBrand}>IRIFE</Text>
+        <Text style={styles.footerText}>A more meaningful way to discover Morocco.</Text>
+        <Text style={styles.footerVersion}>Version 0.1.0 · Preferences are stored locally</Text>
       </View>
     </ScreenContainer>
   );
@@ -83,105 +158,39 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   header: { gap: 8 },
-  back: {
-    alignSelf: "flex-start",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginBottom: 8,
-    paddingVertical: 4,
-  },
-  backText: {
-    color: theme.colors.primaryDark,
-    fontSize: 12,
-    fontWeight: "800",
-  },
-  eyebrow: {
-    color: theme.colors.primary,
-    fontSize: 10,
-    fontWeight: "900",
-    letterSpacing: 1.5,
-  },
-  title: {
-    color: theme.colors.ink,
-    fontSize: 30,
-    lineHeight: 36,
-    fontWeight: "900",
-  },
-  subtitle: {
-    color: theme.colors.secondary,
-    fontSize: 14,
-    lineHeight: 21,
-  },
+  back: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 8, paddingVertical: 4 },
+  backText: { color: theme.colors.primaryDark, fontSize: 12, fontWeight: '800' },
+  eyebrow: { color: theme.colors.primary, fontSize: 10, fontWeight: '900', letterSpacing: 1.5 },
+  title: { color: theme.colors.ink, fontSize: 30, lineHeight: 36, fontWeight: '900' },
+  subtitle: { color: theme.colors.secondary, fontSize: 13, lineHeight: 20 },
+  loading: { minHeight: 100, alignItems: 'center', justifyContent: 'center', gap: 10 },
   section: { gap: 10 },
-  sectionTitle: {
-    color: theme.colors.ink,
-    fontSize: 16,
-    fontWeight: "900",
-  },
-  group: {
-    overflow: "hidden",
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
-  },
-  row: {
-    minHeight: 76,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingHorizontal: 13,
-    paddingVertical: 12,
-  },
-  iconWrap: {
-    width: 40,
-    height: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 13,
-    backgroundColor: theme.colors.softMint,
-  },
+  sectionTitle: { color: theme.colors.ink, fontSize: 16, fontWeight: '900' },
+  group: { overflow: 'hidden', borderRadius: 18, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
+  preferenceBlock: { gap: 11, padding: 14 },
+  preferenceHeading: { gap: 4 },
+  rowTitle: { color: theme.colors.ink, fontSize: 12, fontWeight: '800' },
+  description: { color: theme.colors.secondary, fontSize: 10, lineHeight: 15 },
+  choices: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 },
+  choice: { minHeight: 35, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingHorizontal: 11, borderRadius: 12, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.background },
+  choiceSelected: { borderColor: theme.colors.primaryDark, backgroundColor: theme.colors.primaryDark },
+  choiceText: { color: theme.colors.secondary, fontSize: 10, fontWeight: '800' },
+  choiceTextSelected: { color: theme.colors.white },
+  separator: { height: 1, backgroundColor: theme.colors.border, marginHorizontal: 14 },
+  saved: { flexDirection: 'row', alignItems: 'center', gap: 7, padding: 11, borderRadius: 12, backgroundColor: theme.colors.softMint },
+  savedText: { color: theme.colors.primaryDark, fontSize: 10, fontWeight: '800' },
+  error: { flexDirection: 'row', alignItems: 'center', gap: 7, padding: 11, borderRadius: 12, backgroundColor: theme.colors.dangerSoft },
+  errorText: { flex: 1, color: theme.colors.danger, fontSize: 10 },
+  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 11, padding: 13, borderRadius: 15, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
+  iconWrap: { width: 39, height: 39, alignItems: 'center', justifyContent: 'center', borderRadius: 13, backgroundColor: theme.colors.softMint },
   copy: { flex: 1, gap: 4 },
-  rowHeading: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 5,
-  },
-  rowTitle: {
-    color: theme.colors.ink,
-    fontSize: 12,
-    fontWeight: "800",
-  },
-  value: {
-    color: theme.colors.primary,
-    fontSize: 9,
-    fontWeight: "800",
-  },
-  description: {
-    color: theme.colors.secondary,
-    fontSize: 10,
-    lineHeight: 15,
-  },
-  separator: {
-    height: 1,
-    marginLeft: 65,
-    backgroundColor: theme.colors.border,
-  },
-  note: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 9,
-    padding: 14,
-    borderRadius: 16,
-    backgroundColor: theme.colors.softMint,
-  },
-  noteText: {
-    flex: 1,
-    color: theme.colors.primaryDark,
-    fontSize: 11,
-    lineHeight: 17,
-  },
+  status: { color: theme.colors.secondary, fontSize: 9, fontWeight: '900' },
+  securityCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 11, padding: 14, borderRadius: 16, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
+  securityHint: { color: theme.colors.secondary, fontSize: 9, lineHeight: 14, marginTop: 4 },
+  signOut: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 14, backgroundColor: theme.colors.dangerSoft },
+  signOutText: { color: theme.colors.danger, fontSize: 11, fontWeight: '900' },
+  footer: { alignItems: 'center', gap: 4, paddingVertical: 12 },
+  footerBrand: { color: theme.colors.primaryDark, fontSize: 13, fontWeight: '900', letterSpacing: 2 },
+  footerText: { color: theme.colors.secondary, fontSize: 10 },
+  footerVersion: { color: theme.colors.secondary, fontSize: 9, marginTop: 4 },
 });
