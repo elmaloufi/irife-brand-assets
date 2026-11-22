@@ -38,7 +38,7 @@ export class PasswordRecoveryService {
     });
 
     try {
-      await this.email.sendPasswordReset(user.email, token);
+      await this.email.deliverOneTimeRecoveryCode(user.email, token);
     } catch {
       // Keep the public response indistinguishable for existing and unknown
       // accounts. Consume the undelivered token; users can safely retry.
