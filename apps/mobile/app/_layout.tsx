@@ -18,6 +18,7 @@ function AppNavigation() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="auth/sign-in" options={{ presentation: 'card' }} />
         <Stack.Screen name="auth/register" options={{ presentation: 'card' }} />
+        <Stack.Screen name="auth/reset-password" options={{ presentation: 'card' }} />
         <Stack.Screen name="experiences/[id]" />
         <Stack.Screen name="settings" />
         <Stack.Screen name="settings/security" />
