@@ -208,6 +208,12 @@ export default function DiscoverScreen() {
                 <Text style={styles.priceText}>
                   {experience.priceFrom ? `From ${experience.priceFrom} ${experience.currency}` : 'Contact provider for price'}
                 </Text>
+                <Link href={`/experiences/${experience.id}`} asChild>
+                  <Pressable style={styles.detailsButton}>
+                    <Text style={styles.detailsButtonText}>View experience</Text>
+                    <Ionicons name="arrow-forward" size={14} color={theme.colors.primary} />
+                  </Pressable>
+                </Link>
               </View>
             </View>
           ))}
@@ -268,6 +274,8 @@ const styles = StyleSheet.create({
     borderRadius: 15, backgroundColor: theme.colors.softMint,
   },
   experienceList: { gap: 14 },
+  detailsButton: { minHeight: 35, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 9, borderRadius: 11, backgroundColor: theme.colors.softMint },
+  detailsButtonText: { color: theme.colors.primaryDark, fontSize: 10, fontWeight: '900' },
   experienceCard: {
     overflow: 'hidden', borderRadius: 22, borderWidth: 1,
     borderColor: theme.colors.border, backgroundColor: theme.colors.surface,

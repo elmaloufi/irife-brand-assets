@@ -48,13 +48,13 @@ export async function getCurrentUser(session: AuthSession): Promise<AuthUser> {
   return apiRequest<AuthUser>('/api/v1/identity/me', { headers: { Authorization: `Bearer ${session.accessToken}` } });
 }
 export async function getAccountSessions(session: AuthSession): Promise<AccountSession[]> {
-  return apiRequest<AccountSession[]>('/api/v1/identity/sessions', { headers: { Authorization: `Bearer ${session.accessToken}` } });
+  return authenticatedApiRequest<AccountSession[]>('/api/v1/identity/sessions', { headers: { Authorization: `Bearer ${session.accessToken}` } });
 }
 export async function revokeAccountSession(session: AuthSession, sessionId: string): Promise<void> {
-  return apiRequest<void>(`/api/v1/identity/sessions/${encodeURIComponent(sessionId)}`, { method: 'DELETE', headers: { Authorization: `Bearer ${session.accessToken}` } });
+  return authenticatedApiRequest<void>(`/api/v1/identity/sessions/${encodeURIComponent(sessionId)}`, { method: 'DELETE', headers: { Authorization: `Bearer ${session.accessToken}` } });
 }
 export async function updateAccountPassword(session: AuthSession, currentPassword: string, newPassword: string): Promise<void> {
-  return apiRequest<void>('/api/v1/identity/password', { method: 'POST', headers: { Authorization: `Bearer ${session.accessToken}` }, body: JSON.stringify({ currentPassword, newPassword }) });
+  return authenticatedApiRequest<void>('/api/v1/identity/password', { method: 'POST', headers: { Authorization: `Bearer ${session.accessToken}` }, body: JSON.stringify({ currentPassword, newPassword }) });
 }
 export async function restoreSession(session: AuthSession): Promise<AuthSession | null> {
   try {
@@ -72,4 +72,22 @@ export async function signOut(session: AuthSession | null): Promise<void> {
   try {
     if (session) await apiRequest<void>('/api/v1/identity/logout', { method: 'POST', headers: { Authorization: `Bearer ${session.accessToken}` } });
   } finally { await clearStoredSession(); }
+}
+
+export async function authenticatedApiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const session = await readStoredSession();
+  if (!session) throw new ApiClientError('Sign in to continue.', 401, 'AUTHENTICATION_REQUIRED');
+  const send = (accessToken: string) => {
+    const headers = new Headers(init.headers);
+    headers.set('Authorization', `Bearer ${accessToken}`);
+    return apiRequest<T>(path, { ...init, headers });
+  };
+  try {
+    return await send(session.accessToken);
+  } catch (error) {
+    if (!(error instanceof ApiClientError) || error.status !== 401) throw error;
+    const refreshed = await refreshSession(session);
+    if (!refreshed) throw error;
+    return send(refreshed.accessToken);
+  }
 }
