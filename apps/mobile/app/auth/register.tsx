@@ -20,6 +20,7 @@ export default function RegisterScreen() {
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [visible, setVisible] = useState(false);
 
   async function submit() {
@@ -32,7 +33,8 @@ export default function RegisterScreen() {
     }
   }
 
-  const canSubmit = displayName.trim().length >= 2 && email.includes('@') && password.length >= 12;
+  const passwordsMatch = confirmPassword.length > 0 && password === confirmPassword;
+  const canSubmit = displayName.trim().length >= 2 && email.includes('@') && password.length >= 12 && passwordsMatch;
 
   return (
     <ScreenContainer>
@@ -74,6 +76,14 @@ export default function RegisterScreen() {
             </View>
             <Text style={styles.hint}>Use at least 12 characters. A longer, unique passphrase is best.</Text>
           </View>
+          <View style={styles.field}>
+            <Text style={styles.label}>Confirm password</Text>
+            <View style={styles.inputShell}>
+              <Ionicons name="lock-closed-outline" size={18} color={theme.colors.secondary} />
+              <TextInput accessibilityLabel="Confirm password" autoCapitalize="none" autoComplete="new-password" placeholder="Enter your password again" placeholderTextColor="#9AA59F" secureTextEntry style={styles.input} value={confirmPassword} onChangeText={setConfirmPassword} />
+            </View>
+            {confirmPassword.length > 0 && !passwordsMatch ? <Text style={styles.mismatch}>Passwords do not match.</Text> : null}
+          </View>
           {error ? <View accessibilityRole="alert" style={styles.error}><Ionicons name="alert-circle-outline" size={17} color={theme.colors.danger} /><Text style={styles.errorText}>{error}</Text></View> : null}
           <Pressable accessibilityRole="button" disabled={isSubmitting || !canSubmit} onPress={() => void submit()} style={[styles.submit, (isSubmitting || !canSubmit) && styles.disabled]}>
             {isSubmitting ? <ActivityIndicator color={theme.colors.white} /> : <Text style={styles.submitText}>Create my account</Text>}
@@ -106,6 +116,7 @@ const styles = StyleSheet.create({
   inputShell: { minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, borderRadius: 16, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
   input: { flex: 1, color: theme.colors.ink, fontSize: 14, paddingVertical: 12 },
   hint: { color: theme.colors.secondary, fontSize: 10 },
+  mismatch: { color: theme.colors.danger, fontSize: 10, fontWeight: '700' },
   error: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 12, borderRadius: 13, backgroundColor: theme.colors.dangerSoft },
   errorText: { flex: 1, color: theme.colors.danger, fontSize: 11, lineHeight: 17 },
   submit: { minHeight: 53, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, borderRadius: 17, backgroundColor: theme.colors.primaryDark },
