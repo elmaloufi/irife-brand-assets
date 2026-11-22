@@ -94,8 +94,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
     setIsSubmitting(true);
     try {
       await requestSignOut(session);
-      setSession(null);
     } finally {
+      // Clear in-memory identity even if the network is unavailable. The local
+      // refresh credential is removed by requestSignOut's finally block.
+      setSession(null);
       setIsSubmitting(false);
     }
   }, [session]);
