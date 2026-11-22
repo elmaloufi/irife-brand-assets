@@ -37,6 +37,17 @@ describe('IdentityRateLimitGuard', () => {
     expect(guard.canActivate(secondClient)).toBe(true);
   });
 
+  it('normalizes the global API prefix before selecting a route limit', () => {
+    const guard = new IdentityRateLimitGuard();
+    const context = contextFor('192.0.2.14', '/api/v1/identity/register');
+
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      guard.canActivate(context);
+    }
+
+    expect(() => guard.canActivate(context)).toThrow(TooManyRequestsException);
+  });
+
   it('applies a stricter limit to registration', () => {
     const guard = new IdentityRateLimitGuard();
     const context = contextFor('192.0.2.13', '/identity/register');

@@ -21,7 +21,8 @@ export class IdentityRateLimitGuard implements CanActivate {
     const http = context.switchToHttp();
     const request = http.getRequest<Request>();
     const response = http.getResponse<Response>();
-    const route = request.route?.path ?? request.path;
+    const rawRoute = request.route?.path ?? request.path;
+    const route = rawRoute.replace(/^\\/api\\/v\\d+/, '') || rawRoute;
     const limit = LIMITS[route] ?? 10;
     const key = `${request.ip ?? 'unknown'}:${request.method}:${route}`;
     const now = Date.now();
