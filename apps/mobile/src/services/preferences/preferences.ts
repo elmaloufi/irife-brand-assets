@@ -2,7 +2,7 @@ import * as SecureStore from 'expo-secure-store';
 
 const PREFERENCES_KEY = 'irife.preferences.v1';
 
-export type AppLanguage = 'en' | 'fr' | 'ar';
+export type AppLanguage = 'en' | 'fr' | 'ar' | 'es' | 'de' | 'pt' | 'it' | 'zh' | 'ja' | 'tr' | 'nl';
 export type AppCurrency = 'MAD' | 'EUR' | 'USD';
 export type AppAppearance = 'system' | 'light' | 'dark';
 export type DistanceUnit = 'km' | 'mi';
@@ -23,7 +23,7 @@ export const DEFAULT_PREFERENCES: AppPreferences = {
   region: 'MA',
 };
 
-const languages: AppLanguage[] = ['en', 'fr', 'ar'];
+const languages: AppLanguage[] = ['en', 'fr', 'ar', 'es', 'de', 'pt', 'it', 'zh', 'ja', 'tr', 'nl'];
 const currencies: AppCurrency[] = ['MAD', 'EUR', 'USD'];
 const appearances: AppAppearance[] = ['system', 'light', 'dark'];
 const distanceUnits: DistanceUnit[] = ['km', 'mi'];
