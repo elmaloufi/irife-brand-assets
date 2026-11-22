@@ -1,7 +1,8 @@
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Link, router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text as NativeText, View } from 'react-native';
+import { AppText as Text } from '../../src/components/AppText';
 import type { EnquirySummary } from '@irife/contracts';
 import { useAuth } from '../../src/auth/AuthProvider';
 import { ScreenContainer } from '../../src/components/ScreenContainer';
