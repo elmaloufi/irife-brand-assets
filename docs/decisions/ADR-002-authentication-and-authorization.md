@@ -32,9 +32,11 @@ Use **opaque, random bearer tokens backed by server-side sessions in PostgreSQL*
 
 ### Password handling
 
-For password-based sign-in, hash passwords with **Argon2id** using maintained library defaults reviewed at implementation time. Never encrypt or store plaintext passwords. Apply rate limits to sign-in, refresh, and recovery endpoints. Authentication responses must not disclose whether an account exists.
-
-Account recovery, email/SMS verification, social sign-in, and multi-factor authentication are not part of the initial foundation and require separate product/security decisions before implementation.
+- Passwords are never stored in plaintext or reversibly encrypted.
+- The initial backend slice uses Node.js built-in **scrypt** with a random 128-bit salt, cost N=32768, r=8, p=1, a 64-byte derived key, and a 64 MiB memory ceiling. Verification uses constant-time comparison.
+- This implementation choice avoids introducing an unverified native addon into the mobile-adjacent monorepo. Before public launch, benchmark scrypt on the intended API host and reassess Argon2id; any algorithm change must support versioned hashes and a safe rehash-on-login migration.
+- Authentication endpoints must receive distributed rate limiting before public exposure. The initial local-only slice does not claim production-ready abuse protection.
+- Authentication responses must not disclose whether an account exists. Account recovery, email/SMS verification, social sign-in, and multi-factor authentication are not part of this foundation and require separate product/security decisions before implementation.
 
 ### Roles and provider membership
 
@@ -62,5 +64,5 @@ Account recovery, email/SMS verification, social sign-in, and multi-factor authe
 
 - Session validation adds a bounded database lookup to protected requests; use indexed token-digest columns and measure before optimizing.
 - Refresh rotation must be transactional and concurrency-safe. A replay must revoke the affected session rather than silently mint another token.
-- Rate limits, audit events for sensitive session actions, secret redaction, and negative authorization tests are release gates.
+- Audit events for sensitive session actions and distributed rate limiting are release gates before public exposure.
 - Provider onboarding, verification evidence, admin workflow, retention, and account recovery remain open before those capabilities are exposed.
