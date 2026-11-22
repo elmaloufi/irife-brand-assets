@@ -5,13 +5,13 @@ import { EnquiriesService } from './enquiries.service.js';
 describe('traveler enquiries', () => {
   it('derives traveler and provider ownership from trusted server context', async () => {
     const created = {
-      id: 'enquiry-1', createdAt: new Date('2026-11-22T10:00:00Z'), requestedStartAt: null,
+      id: 'enquiry-1', createdAt: '2026-11-22T10:00:00.000Z', requestedStartAt: null,
       guestCount: 2, message: 'We would like to visit next week.', status: 'PENDING',
       experience: { id: 'experience-1', title: 'Old Medina walk', destination: { name: 'Fez' }, provider: { name: 'Local host' } },
     };
     const prisma = {
       experience: { findFirst: jest.fn().mockResolvedValue({ id: 'experience-1', providerId: 'provider-1' }) },
-      enquiry: { create: jest.fn().mockResolvedValue(created) },
+      enquiry: { create: jest.fn().mockResolvedValue({ ...created, createdAt: new Date(created.createdAt) }) },
     };
     const service = new EnquiriesService(prisma as never);
     await expect(service.create('traveler-1', {
