@@ -1,7 +1,7 @@
 import {
-  ConflictException, Injectable, UnauthorizedException,
+  BadRequestException, Injectable, UnauthorizedException,
 } from '@nestjs/common';
-import { randomUUID } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { hashPassword, verifyPassword } from './password-hasher.js';
 import { createOpaqueToken, hashToken } from './token.util.js';
@@ -9,6 +9,7 @@ import type { AuthenticatedUser } from './identity.types.js';
 
 const ACCESS_TTL_MS = 15 * 60 * 1000;
 const REFRESH_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+const DUMMY_PASSWORD_HASH = hashPassword(randomBytes(32).toString('base64url'));
 
 @Injectable()
 export class IdentityService {
@@ -25,7 +26,7 @@ export class IdentityService {
       });
     } catch (error) {
       if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
-        throw new ConflictException({ code: 'EMAIL_ALREADY_REGISTERED', message: 'An account could not be created with these details.' });
+        throw new BadRequestException({ code: 'ACCOUNT_CREATION_FAILED', message: 'An account could not be created with these details.' });
       }
       throw error;
     }
@@ -37,7 +38,10 @@ export class IdentityService {
       where: { email: input.email.trim().toLowerCase() },
       select: { id: true, email: true, displayName: true, role: true, status: true, passwordHash: true },
     });
-    if (!user || user.status !== 'ACTIVE' || !(await verifyPassword(input.password, user.passwordHash))) {
+    const passwordMatches = user
+      ? await verifyPassword(input.password, user.passwordHash)
+      : await verifyPassword(input.password, await DUMMY_PASSWORD_HASH);
+    if (!user || user.status !== 'ACTIVE' || !passwordMatches) {
       throw new UnauthorizedException({ code: 'INVALID_CREDENTIALS', message: 'Email or password is incorrect.' });
     }
     const { status: _status, passwordHash: _passwordHash, ...safeUser } = user;

@@ -3,6 +3,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AccessTokenGuard } from './access-token.guard.js';
 import { CurrentUser } from './current-user.decorator.js';
 import { IdentityService } from './identity.service.js';
+import { IdentityRateLimitGuard } from './identity-rate-limit.guard.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RefreshDto } from './dto/refresh.dto.js';
 import { RegisterDto } from './dto/register.dto.js';
@@ -14,17 +15,20 @@ export class IdentityController {
   constructor(private readonly identity: IdentityService) {}
 
   @Post('register')
+  @UseGuards(IdentityRateLimitGuard)
   register(@Body() body: RegisterDto) {
     return this.identity.register(body);
   }
 
   @Post('login')
+  @UseGuards(IdentityRateLimitGuard)
   @HttpCode(200)
   login(@Body() body: LoginDto) {
     return this.identity.login(body);
   }
 
   @Post('refresh')
+  @UseGuards(IdentityRateLimitGuard)
   @HttpCode(200)
   refresh(@Body() body: RefreshDto) {
     return this.identity.refresh(body.refreshToken);
