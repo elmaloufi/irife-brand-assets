@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
   scrollContent: { flexGrow: 1, backgroundColor: '#102F2A', paddingBottom: 12 },
   hero: { minHeight: 390, justifyContent: 'space-between', paddingHorizontal: 24, paddingTop: 8, paddingBottom: 54, overflow: 'hidden' },
   heroImage: { opacity: 0.96 },
-  heroShade: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(7, 29, 25, 0.56)' },
+  heroShade: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(7, 29, 25, 0.56)' },
   heroTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   backButton: { width: 42, height: 42, borderRadius: 15, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.32)', backgroundColor: 'rgba(12,35,30,0.24)' },
   languagePill: { minHeight: 34, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, borderRadius: 99, borderWidth: 1, borderColor: 'rgba(240,215,167,0.5)', backgroundColor: 'rgba(12,35,30,0.3)' },
