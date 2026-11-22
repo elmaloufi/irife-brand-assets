@@ -1,27 +1,28 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { getAuthRedirect } from './route-access.mjs';
+import { getAuthRouteGuards } from './route-access.mjs';
 
-test('waits for session restoration before deciding where to navigate', () => {
-  assert.equal(getAuthRedirect({ isLoading: true, hasSession: false, segments: [] }), null);
+test('keeps every guarded route unavailable while session restoration is pending', () => {
+  assert.deepEqual(getAuthRouteGuards({ isLoading: true, hasSession: false }), {
+    authenticated: false,
+    public: false,
+  });
+  assert.deepEqual(getAuthRouteGuards({ isLoading: true, hasSession: true }), {
+    authenticated: false,
+    public: false,
+  });
 });
 
-test('sends unauthenticated visitors to cinematic sign-in from protected routes', () => {
-  assert.equal(getAuthRedirect({ isLoading: false, hasSession: false, segments: ['(tabs)', 'index'] }), '/auth/sign-in');
+test('allows only public authentication screens when no session exists', () => {
+  assert.deepEqual(getAuthRouteGuards({ isLoading: false, hasSession: false }), {
+    authenticated: false,
+    public: true,
+  });
 });
 
-test('allows unauthenticated visitors to use sign-in, registration and password recovery', () => {
-  for (const segments of [['auth', 'sign-in'], ['auth', 'register'], ['auth', 'reset-password']]) {
-    assert.equal(getAuthRedirect({ isLoading: false, hasSession: false, segments }), null);
-  }
-});
-
-test('sends authenticated visitors away from public auth screens into the app', () => {
-  for (const segments of [['auth', 'sign-in'], ['auth', 'register'], ['auth', 'reset-password']]) {
-    assert.equal(getAuthRedirect({ isLoading: false, hasSession: true, segments }), '/(tabs)');
-  }
-});
-
-test('keeps authenticated visitors on protected app routes', () => {
-  assert.equal(getAuthRedirect({ isLoading: false, hasSession: true, segments: ['(tabs)', 'discover'] }), null);
+test('allows only protected application screens when a session exists', () => {
+  assert.deepEqual(getAuthRouteGuards({ isLoading: false, hasSession: true }), {
+    authenticated: true,
+    public: false,
+  });
 });
