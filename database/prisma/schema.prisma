@@ -40,6 +40,10 @@ enum CredentialType {
   REFRESH
 }
 
+enum IdentityActionType {
+  PASSWORD_RESET
+}
+
 enum ExperienceStatus {
   DRAFT
   PUBLISHED
@@ -64,6 +68,7 @@ model User {
   createdAt      DateTime              @default(now()) @db.Timestamptz(3)
   updatedAt      DateTime              @updatedAt @db.Timestamptz(3)
   sessions       Session[]
+  identityActionTokens IdentityActionToken[]
   memberships    ProviderMembership[]
   enquiries      Enquiry[]
   auditEvents    AuditEvent[]
@@ -71,6 +76,21 @@ model User {
   savedExperiences SavedExperience[]
 
   @@index([status, createdAt])
+}
+
+
+model IdentityActionToken {
+  id         String             @id @default(uuid()) @db.Uuid
+  userId     String             @db.Uuid
+  tokenHash  String             @unique @db.Char(64)
+  type       IdentityActionType
+  expiresAt  DateTime           @db.Timestamptz(3)
+  consumedAt DateTime?          @db.Timestamptz(3)
+  createdAt  DateTime           @default(now()) @db.Timestamptz(3)
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type, consumedAt])
+  @@index([expiresAt])
 }
 
 model Session {

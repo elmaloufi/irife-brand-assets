@@ -17,6 +17,8 @@ const POLICIES: Record<string, WindowPolicy> = {
   '/identity/register': { max: 3, windowMs: 60 * 60 * 1000 },
   '/identity/login': { max: 5, windowMs: 15 * 60 * 1000 },
   '/identity/refresh': { max: 20, windowMs: 15 * 60 * 1000 },
+  '/identity/password/forgot': { max: 3, windowMs: 60 * 60 * 1000 },
+  '/identity/password/reset': { max: 5, windowMs: 15 * 60 * 1000 },
 };
 
 @Injectable()

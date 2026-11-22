@@ -1,14 +1,16 @@
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Link } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
+import { AppText as Text } from '../../src/components/AppText';
+import { AppTextInput as TextInput } from '../../src/components/AppTextInput';
 import type { DestinationSummary, ExperienceCard } from '@irife/contracts';
 import { ScreenContainer } from '../../src/components/ScreenContainer';
 import { getDestinations, getExperiences } from '../../src/services/api/discovery';
@@ -22,6 +24,7 @@ export default function DiscoverScreen() {
   const [destinations, setDestinations] = useState<DestinationSummary[]>([]);
   const [experiences, setExperiences] = useState<ExperienceCard[]>([]);
   const [selectedDestinationId, setSelectedDestinationId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
   const [destinationsLoading, setDestinationsLoading] = useState(true);
   const [experiencesLoading, setExperiencesLoading] = useState(true);
   const [destinationsError, setDestinationsError] = useState<string | null>(null);
@@ -74,6 +77,15 @@ export default function DiscoverScreen() {
     (destination) => destination.id === selectedDestinationId,
   );
 
+  const visibleExperiences = useMemo(() => experiences.filter((experience) => {
+    const query = search.trim().toLowerCase();
+    if (!query) return true;
+    return [experience.title, experience.summary ?? '', experience.destination.name, experience.provider.name]
+      .join(' ')
+      .toLowerCase()
+      .includes(query);
+  }), [experiences, search]);
+
   return (
     <ScreenContainer>
       <View style={styles.header}>
@@ -93,6 +105,12 @@ export default function DiscoverScreen() {
           </View>
         </Pressable>
       </Link>
+
+      <View style={styles.searchInputShell}>
+        <Ionicons name="search-outline" size={18} color={theme.colors.secondary} />
+        <TextInput value={search} onChangeText={setSearch} placeholder="Search experiences, places or hosts" placeholderTextColor={theme.colors.secondary} accessibilityLabel="Search experiences, destinations and hosts" style={styles.searchInput} />
+        {search.length > 0 ? <Pressable accessibilityRole="button" accessibilityLabel="Clear search" onPress={() => setSearch('')}><Ionicons name="close-circle" size={17} color={theme.colors.secondary} /></Pressable> : null}
+      </View>
 
       <View style={styles.sectionHeading}>
         <View>
@@ -174,7 +192,7 @@ export default function DiscoverScreen() {
           <ActivityIndicator size="large" color={theme.colors.primary} />
           <Text style={styles.noticeText}>Loading published experiences…</Text>
         </View>
-      ) : experiences.length === 0 ? (
+      ) : visibleExperiences.length === 0 ? (
         <View style={styles.noticeCard}>
           <View style={styles.emptyIcon}>
             <Ionicons name="sparkles-outline" size={23} color={theme.colors.primary} />
@@ -188,13 +206,17 @@ export default function DiscoverScreen() {
         </View>
       ) : (
         <View style={styles.experienceList}>
-          {experiences.map((experience) => (
+          {visibleExperiences.map((experience) => (
             <View key={experience.id} style={styles.experienceCard}>
-              <View style={styles.experienceArt}>
-                <View style={styles.artSun} />
-                <View style={styles.artArch} />
-                <Ionicons name="compass-outline" size={25} color={theme.colors.white} />
-              </View>
+              {experience.media[0]?.url ? (
+                <Image source={{ uri: experience.media[0].url }} accessibilityLabel={experience.media[0].altText || experience.title} style={styles.experienceArtImage} />
+              ) : (
+                <View style={styles.experienceArt}>
+                  <View style={styles.artSun} />
+                  <View style={styles.artArch} />
+                  <Ionicons name="compass-outline" size={25} color={theme.colors.white} />
+                </View>
+              )}
               <View style={styles.experienceCopy}>
                 <Text style={styles.experienceLocation}>{experience.destination.name.toUpperCase()}</Text>
                 <Text style={styles.experienceTitle}>{experience.title}</Text>
@@ -241,6 +263,9 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border, backgroundColor: theme.colors.surface,
   },
   searchText: { flex: 1, color: theme.colors.secondary, fontSize: 12 },
+  searchInputShell: { minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: 9, paddingHorizontal: 13, borderRadius: 16, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
+  searchInput: { flex: 1, minHeight: 48, color: theme.colors.ink, fontSize: 11, paddingVertical: 8 },
+  experienceArtImage: { width: '100%', height: 140, backgroundColor: theme.colors.softMint },
   searchAction: {
     width: 36, height: 36, alignItems: 'center', justifyContent: 'center',
     borderRadius: 12, backgroundColor: theme.colors.primary,

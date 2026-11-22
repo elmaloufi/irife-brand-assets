@@ -7,10 +7,10 @@ import {
   Platform,
   Pressable,
   StyleSheet,
-  Text,
-  TextInput,
   View,
 } from 'react-native';
+import { AppTextInput as TextInput } from '../../src/components/AppTextInput';
+import { AppText as Text } from '../../src/components/AppText';
 import { useAuth } from '../../src/auth/AuthProvider';
 import { ScreenContainer } from '../../src/components/ScreenContainer';
 import { theme } from '../../src/theme';
@@ -27,7 +27,7 @@ export default function RegisterScreen() {
     clearError();
     try {
       await signUp(displayName, email, password);
-      router.replace('/(tabs)/profile');
+      router.replace('/(tabs)');
     } catch {
       // The provider exposes a safe, user-readable error.
     }
