@@ -1,5 +1,5 @@
 import {
-  ConflictException, Injectable, UnauthorizedException,
+  ConflictException, Injectable, NotFoundException, UnauthorizedException,
 } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -37,7 +37,13 @@ export class IdentityService {
       where: { email: input.email.trim().toLowerCase() },
       select: { id: true, email: true, displayName: true, role: true, status: true, passwordHash: true },
     });
-    if (!user || user.status !== 'ACTIVE' || !(await verifyPassword(input.password, user.passwordHash))) {
+    // Perform the same expensive password derivation for unknown and suspended accounts
+    // to reduce account-enumeration timing differences.
+    const passwordMatches = user
+      ? await verifyPassword(input.password, user.passwordHash)
+      : (await hashPassword(input.password), false);
+
+    if (!user || user.status !== 'ACTIVE' || !passwordMatches) {
       throw new UnauthorizedException({ code: 'INVALID_CREDENTIALS', message: 'Email or password is incorrect.' });
     }
     const { status: _status, passwordHash: _passwordHash, ...safeUser } = user;
@@ -107,6 +113,57 @@ export class IdentityService {
       accessToken, refreshToken: nextRefreshToken, tokenType: 'Bearer',
       expiresIn: Math.floor(ACCESS_TTL_MS / 1000),
     };
+  }
+
+  async listSessions(userId: string, currentSessionId: string) {
+    const sessions = await this.prisma.session.findMany({
+      where: { userId, revokedAt: null },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true, createdAt: true, lastUsedAt: true },
+    });
+    return sessions.map((session) => ({
+      id: session.id,
+      createdAt: session.createdAt,
+      lastUsedAt: session.lastUsedAt,
+      isCurrent: session.id === currentSessionId,
+    }));
+  }
+
+  async revokeSession(userId: string, sessionId: string): Promise<void> {
+    const session = await this.prisma.session.findFirst({
+      where: { id: sessionId, userId, revokedAt: null },
+      select: { id: true },
+    });
+    if (!session) {
+      throw new NotFoundException({ code: 'SESSION_NOT_FOUND', message: 'The requested session was not found.' });
+    }
+    const now = new Date();
+    await this.prisma.$transaction([
+      this.prisma.session.updateMany({ where: { id: session.id, userId, revokedAt: null }, data: { revokedAt: now } }),
+      this.prisma.sessionCredential.updateMany({ where: { sessionId: session.id, revokedAt: null }, data: { revokedAt: now } }),
+    ]);
+  }
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { passwordHash: true, status: true },
+    });
+    if (!user || user.status !== 'ACTIVE' || !(await verifyPassword(currentPassword, user.passwordHash))) {
+      throw new UnauthorizedException({ code: 'CURRENT_PASSWORD_INVALID', message: 'The current password is incorrect.' });
+    }
+    const passwordHash = await hashPassword(newPassword);
+    const sessions = await this.prisma.session.findMany({
+      where: { userId, revokedAt: null },
+      select: { id: true },
+    });
+    const sessionIds = sessions.map((session) => session.id);
+    const now = new Date();
+    await this.prisma.$transaction([
+      this.prisma.user.update({ where: { id: userId }, data: { passwordHash } }),
+      this.prisma.session.updateMany({ where: { id: { in: sessionIds }, revokedAt: null }, data: { revokedAt: now } }),
+      this.prisma.sessionCredential.updateMany({ where: { sessionId: { in: sessionIds }, revokedAt: null }, data: { revokedAt: now } }),
+    ]);
   }
 
   async logout(sessionId: string): Promise<void> {
