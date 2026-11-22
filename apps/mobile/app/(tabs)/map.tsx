@@ -1,360 +1,184 @@
-import { Ionicons } from "@react-native-vector-icons/ionicons";
-import { useState } from "react";
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Ionicons } from '@react-native-vector-icons/ionicons';
+import { router } from 'expo-router';
+import { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import type { DestinationSummary, ExperienceCard } from '@irife/contracts';
+import { AppTextInput as TextInput } from '../../src/components/AppTextInput';
 import { AppText as Text } from '../../src/components/AppText';
-import { ScreenContainer } from "../../src/components/ScreenContainer";
-import { theme } from "../../src/theme";
-
-const categories = [
-  { id: "all", label: "All", icon: "apps-outline" as const },
-  { id: "experiences", label: "Experiences", icon: "sparkles-outline" as const },
-  { id: "food", label: "Food", icon: "restaurant-outline" as const },
-  { id: "heritage", label: "Heritage", icon: "business-outline" as const },
-  { id: "nature", label: "Nature", icon: "leaf-outline" as const },
-  { id: "essentials", label: "Essentials", icon: "medkit-outline" as const },
-];
+import { ScreenContainer } from '../../src/components/ScreenContainer';
+import { getDestinations, getExperiences } from '../../src/services/api/discovery';
+import { theme } from '../../src/theme';
 
 export default function MapScreen() {
-  const [activeCategory, setActiveCategory] = useState("all");
+  const [destinations, setDestinations] = useState<DestinationSummary[]>([]);
+  const [experiences, setExperiences] = useState<ExperienceCard[]>([]);
+  const [selectedDestinationId, setSelectedDestinationId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError(null);
+    Promise.all([
+      getDestinations({ page: 1, limit: 50 }),
+      getExperiences({ page: 1, limit: 50 }),
+    ]).then(([destinationResult, experienceResult]) => {
+      if (!active) return;
+      setDestinations(destinationResult.data);
+      setExperiences(experienceResult.data);
+    }).catch((cause: unknown) => {
+      if (active) setError(cause instanceof Error ? cause.message : 'Could not load places from IRIFE.');
+    }).finally(() => {
+      if (active) setLoading(false);
+    });
+    return () => { active = false; };
+  }, [reloadKey]);
+
+  const filteredDestinations = useMemo(() => destinations.filter((item) => {
+    const matchesSelected = !selectedDestinationId || item.id === selectedDestinationId;
+    const matchesSearch = !search.trim() || item.name.toLowerCase().includes(search.trim().toLowerCase()) || (item.region ?? '').toLowerCase().includes(search.trim().toLowerCase());
+    return matchesSelected && matchesSearch;
+  }), [destinations, selectedDestinationId, search]);
+
+  const filteredExperiences = useMemo(() => experiences.filter((item) => {
+    const matchesDestination = !selectedDestinationId || item.destination.id === selectedDestinationId;
+    const haystack = [item.title, item.summary ?? '', item.destination.name, item.provider.name].join(' ').toLowerCase();
+    const matchesSearch = !search.trim() || haystack.includes(search.trim().toLowerCase());
+    return matchesDestination && matchesSearch;
+  }), [experiences, selectedDestinationId, search]);
 
   return (
     <ScreenContainer>
       <View style={styles.header}>
         <View style={styles.headerCopy}>
           <Text style={styles.eyebrow}>EXPLORE MOROCCO</Text>
-          <Text style={styles.title}>Smart Map</Text>
-          <Text style={styles.subtitle}>
-            Places, local experiences and routes — brought together by IRIFE.
-          </Text>
+          <Text style={styles.title}>Places worth discovering</Text>
+          <Text style={styles.subtitle}>Search published destinations and local experiences across Morocco.</Text>
         </View>
-        <View style={styles.mapIcon}>
-          <Ionicons name="map" size={22} color={theme.colors.primary} />
-        </View>
+        <View style={styles.mapIcon}><Ionicons name="compass" size={22} color={theme.colors.primary} /></View>
       </View>
 
-      <View style={styles.search}>
+      <View style={styles.searchShell}>
         <Ionicons name="search-outline" size={19} color={theme.colors.secondary} />
-        <Text style={styles.searchText}>Search destinations and places</Text>
-        <Ionicons name="options-outline" size={19} color={theme.colors.primary} />
-      </View>
-
-      <View style={styles.categoryList}>
-        {categories.map((category) => {
-          const selected = activeCategory === category.id;
-          return (
-            <Pressable
-              key={category.id}
-              accessibilityRole="button"
-              accessibilityState={{ selected }}
-              onPress={() => setActiveCategory(category.id)}
-              style={[styles.categoryChip, selected && styles.categoryChipSelected]}
-            >
-              <Ionicons
-                name={category.icon}
-                size={15}
-                color={selected ? theme.colors.white : theme.colors.secondary}
-              />
-              <Text style={[styles.categoryText, selected && styles.categoryTextSelected]}>
-                {category.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
-
-      <View style={styles.mapPreview}>
-        <View style={styles.roadOne} />
-        <View style={styles.roadTwo} />
-        <View style={styles.roadThree} />
-        <View style={styles.parkOne} />
-        <View style={styles.parkTwo} />
-        <View style={styles.water} />
-        <View style={styles.previewLabel}>
-          <Ionicons name="layers-outline" size={13} color={theme.colors.primaryDark} />
-          <Text style={styles.previewLabelText}>MAP PREVIEW</Text>
-        </View>
-        <View style={[styles.pin, styles.pinOne]}>
-          <Ionicons name="location" size={27} color={theme.colors.primary} />
-        </View>
-        <View style={[styles.pin, styles.pinTwo]}>
-          <Ionicons name="location" size={25} color="#B57A43" />
-        </View>
-        <View style={[styles.pin, styles.pinThree]}>
-          <Ionicons name="location" size={25} color="#4F7894" />
-        </View>
-        <View style={styles.mapNotice}>
-          <Ionicons name="information-circle-outline" size={17} color={theme.colors.primaryDark} />
-          <Text style={styles.mapNoticeText}>
-            Google Maps will appear here after secure API setup.
-          </Text>
-        </View>
+        <TextInput value={search} onChangeText={setSearch} placeholder="Search a city, experience or host" placeholderTextColor={theme.colors.secondary} accessibilityLabel="Search destinations, experiences and hosts" style={styles.searchInput} returnKeyType="search" />
+        {search.length > 0 ? <Pressable accessibilityRole="button" accessibilityLabel="Clear search" onPress={() => setSearch('')}><Ionicons name="close-circle" size={18} color={theme.colors.secondary} /></Pressable> : null}
       </View>
 
       <View style={styles.sectionHeading}>
-        <View>
-          <Text style={styles.sectionEyebrow}>DISCOVER WITH IRIFE</Text>
-          <Text style={styles.sectionTitle}>Explore by category</Text>
+        <View style={styles.sectionCopy}>
+          <Text style={styles.sectionTitle}>Choose an area</Text>
+          <Text style={styles.helper}>Filter the catalogue by destination</Text>
         </View>
-        <Text style={styles.selectedCount}>
-          {categories.find((item) => item.id === activeCategory)?.label}
-        </Text>
+        {loading ? <ActivityIndicator color={theme.colors.primary} /> : null}
       </View>
 
-      <View style={styles.infoCard}>
-        <View style={styles.infoIcon}>
-          <Ionicons name="compass-outline" size={22} color={theme.colors.primary} />
-        </View>
-        <View style={styles.infoCopy}>
-          <Text style={styles.infoTitle}>Your map is being prepared</Text>
-          <Text style={styles.infoDescription}>
-            IRIFE will combine Google public places with our own verified experiences. No location access is requested on this screen.
-          </Text>
-        </View>
+      <View style={styles.chips}>
+        <Pressable accessibilityRole="button" accessibilityState={{ selected: selectedDestinationId === null }} onPress={() => setSelectedDestinationId(null)} style={[styles.chip, selectedDestinationId === null && styles.chipSelected]}>
+          <Text style={[styles.chipText, selectedDestinationId === null && styles.chipTextSelected]}>All Morocco</Text>
+        </Pressable>
+        {destinations.map((destination) => {
+          const selected = selectedDestinationId === destination.id;
+          return <Pressable key={destination.id} accessibilityRole="button" accessibilityState={{ selected }} onPress={() => setSelectedDestinationId(selected ? null : destination.id)} style={[styles.chip, selected && styles.chipSelected]}>
+            <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{destination.name}</Text>
+          </Pressable>;
+        })}
+      </View>
+
+      {error ? <View style={styles.notice}><Ionicons name="cloud-offline-outline" size={22} color={theme.colors.danger} /><Text style={styles.noticeTitle}>Could not load the IRIFE catalogue</Text><Text style={styles.noticeText}>{error}</Text><Pressable style={styles.retryButton} onPress={() => setReloadKey((value) => value + 1)}><Text style={styles.retryText}>Try again</Text></Pressable></View> : null}
+
+      {loading ? <View style={styles.loading}><ActivityIndicator size="large" color={theme.colors.primary} /><Text style={styles.helper}>Loading destinations and experiences…</Text></View> : null}
+
+      {!loading && !error ? (
+        <>
+          <View style={styles.sectionHeading}>
+            <View style={styles.sectionCopy}>
+              <Text style={styles.sectionTitle}>Destinations</Text>
+              <Text style={styles.helper}>{filteredDestinations.length} {filteredDestinations.length === 1 ? 'place' : 'places'} found</Text>
+            </View>
+            <Ionicons name="location-outline" size={19} color={theme.colors.primary} />
+          </View>
+          {filteredDestinations.length === 0 ? <Text style={styles.emptyText}>No destinations match this search.</Text> : filteredDestinations.map((destination) => (
+            <Pressable key={destination.id} accessibilityRole="button" onPress={() => setSelectedDestinationId(destination.id)} style={({ pressed }) => [styles.destinationCard, pressed && styles.pressed]}>
+              <View style={styles.destinationIcon}><Ionicons name="location" size={20} color={theme.colors.primaryDark} /></View>
+              <View style={styles.destinationCopy}>
+                <Text style={styles.destinationTitle}>{destination.name}</Text>
+                <Text style={styles.destinationSummary}>{destination.summary || destination.region || 'Discover local places and experiences.'}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={theme.colors.secondary} />
+            </Pressable>
+          ))}
+
+          <View style={styles.sectionHeading}>
+            <View style={styles.sectionCopy}>
+              <Text style={styles.sectionTitle}>Experiences nearby in the catalogue</Text>
+              <Text style={styles.helper}>{filteredExperiences.length} published {filteredExperiences.length === 1 ? 'experience' : 'experiences'}</Text>
+            </View>
+            <Ionicons name="sparkles-outline" size={19} color={theme.colors.gold} />
+          </View>
+          {filteredExperiences.length === 0 ? <View style={styles.notice}><Ionicons name="compass-outline" size={23} color={theme.colors.primary} /><Text style={styles.noticeTitle}>No published experiences yet</Text><Text style={styles.noticeText}>Try another destination or clear your search. New experiences will appear here when local hosts publish them.</Text></View> : filteredExperiences.map((experience) => (
+            <Pressable key={experience.id} accessibilityRole="button" onPress={() => router.push(`/experiences/${experience.id}`)} style={({ pressed }) => [styles.experienceCard, pressed && styles.pressed]}>
+              <View style={styles.experienceIcon}><Ionicons name="compass-outline" size={21} color={theme.colors.primaryDark} /></View>
+              <View style={styles.experienceCopy}>
+                <Text style={styles.destinationLabel}>{experience.destination.name.toUpperCase()}</Text>
+                <Text style={styles.experienceTitle}>{experience.title}</Text>
+                {experience.summary ? <Text style={styles.experienceSummary} numberOfLines={2}>{experience.summary}</Text> : null}
+                <Text style={styles.meta}>{experience.provider.name} · {experience.priceFrom ? 'From ' + experience.priceFrom + ' ' + experience.currency : 'Ask host for price'}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={theme.colors.secondary} />
+            </Pressable>
+          ))}
+        </>
+      ) : null}
+
+      <View style={styles.mapStatus}>
+        <Ionicons name="map-outline" size={17} color={theme.colors.primary} />
+        <Text style={styles.mapStatusText}>Interactive map and turn-by-turn routes are a separate integration. This screen currently shows live IRIFE catalogue data and does not display a fake map.</Text>
       </View>
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    gap: 12,
-  },
+  header: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },
   headerCopy: { flex: 1, gap: 7 },
-  eyebrow: {
-    color: theme.colors.primary,
-    fontSize: 10,
-    fontWeight: "900",
-    letterSpacing: 1.4,
-  },
-  title: {
-    color: theme.colors.ink,
-    fontSize: 29,
-    lineHeight: 35,
-    fontWeight: "900",
-  },
-  subtitle: {
-    color: theme.colors.secondary,
-    fontSize: 13,
-    lineHeight: 19,
-  },
-  mapIcon: {
-    width: 46,
-    height: 46,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 15,
-    backgroundColor: theme.colors.softMint,
-  },
-  search: {
-    minHeight: 52,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 11,
-    paddingHorizontal: 15,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
-  },
-  searchText: {
-    flex: 1,
-    color: theme.colors.secondary,
-    fontSize: 12,
-  },
-  categoryList: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  categoryChip: {
-    minHeight: 37,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 12,
-    borderRadius: theme.radius.pill,
-    backgroundColor: theme.colors.surface,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  categoryChipSelected: {
-    backgroundColor: theme.colors.primaryDark,
-    borderColor: theme.colors.primaryDark,
-  },
-  categoryText: {
-    color: theme.colors.secondary,
-    fontSize: 10,
-    fontWeight: "800",
-  },
-  categoryTextSelected: { color: theme.colors.white },
-  mapPreview: {
-    height: 280,
-    overflow: "hidden",
-    position: "relative",
-    borderRadius: 24,
-    backgroundColor: "#E8E9DD",
-  },
-  roadOne: {
-    position: "absolute",
-    width: "130%",
-    height: 24,
-    top: 90,
-    left: -25,
-    borderRadius: 30,
-    backgroundColor: "#FAF8F2",
-    transform: [{ rotate: "-17deg" }],
-  },
-  roadTwo: {
-    position: "absolute",
-    width: "120%",
-    height: 18,
-    top: 175,
-    left: -15,
-    borderRadius: 30,
-    backgroundColor: "#FAF8F2",
-    transform: [{ rotate: "24deg" }],
-  },
-  roadThree: {
-    position: "absolute",
-    width: 19,
-    height: "130%",
-    top: -25,
-    left: "57%",
-    borderRadius: 30,
-    backgroundColor: "#FAF8F2",
-    transform: [{ rotate: "21deg" }],
-  },
-  parkOne: {
-    position: "absolute",
-    width: 110,
-    height: 75,
-    top: 20,
-    left: 22,
-    borderRadius: 28,
-    backgroundColor: "#D1E2CB",
-    transform: [{ rotate: "-13deg" }],
-  },
-  parkTwo: {
-    position: "absolute",
-    width: 120,
-    height: 82,
-    right: 5,
-    bottom: 25,
-    borderRadius: 28,
-    backgroundColor: "#D3E4CD",
-    transform: [{ rotate: "17deg" }],
-  },
-  water: {
-    position: "absolute",
-    width: 95,
-    height: 40,
-    top: 130,
-    right: -20,
-    borderRadius: 40,
-    backgroundColor: "#D0E4E8",
-    transform: [{ rotate: "-20deg" }],
-  },
-  previewLabel: {
-    position: "absolute",
-    top: 13,
-    left: 13,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: theme.radius.pill,
-    backgroundColor: "rgba(255,255,255,0.92)",
-  },
-  previewLabelText: {
-    color: theme.colors.primaryDark,
-    fontSize: 8,
-    fontWeight: "900",
-    letterSpacing: 0.8,
-  },
-  pin: {
-    position: "absolute",
-    alignItems: "center",
-    justifyContent: "center",
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: "rgba(255,255,255,0.9)",
-    elevation: 4,
-  },
-  pinOne: { top: 87, left: "43%" },
-  pinTwo: { top: 165, left: "19%" },
-  pinThree: { top: 44, right: "18%" },
-  mapNotice: {
-    position: "absolute",
-    left: 12,
-    right: 12,
-    bottom: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    padding: 11,
-    borderRadius: 13,
-    backgroundColor: "rgba(255,255,255,0.94)",
-  },
-  mapNoticeText: {
-    flex: 1,
-    color: theme.colors.primaryDark,
-    fontSize: 10,
-    fontWeight: "700",
-  },
-  sectionHeading: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-  },
-  sectionEyebrow: {
-    color: theme.colors.secondary,
-    fontSize: 9,
-    fontWeight: "900",
-    letterSpacing: 1.2,
-    marginBottom: 4,
-  },
-  sectionTitle: {
-    color: theme.colors.ink,
-    fontSize: 18,
-    fontWeight: "900",
-  },
-  selectedCount: {
-    color: theme.colors.primary,
-    fontSize: 10,
-    fontWeight: "800",
-  },
-  infoCard: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 12,
-    padding: 16,
-    borderRadius: 18,
-    backgroundColor: theme.colors.surface,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  infoIcon: {
-    width: 42,
-    height: 42,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 14,
-    backgroundColor: theme.colors.softMint,
-  },
-  infoCopy: { flex: 1, gap: 5 },
-  infoTitle: {
-    color: theme.colors.ink,
-    fontSize: 13,
-    fontWeight: "900",
-  },
-  infoDescription: {
-    color: theme.colors.secondary,
-    fontSize: 11,
-    lineHeight: 17,
-  },
+  eyebrow: { color: theme.colors.primary, fontSize: 10, fontWeight: '900', letterSpacing: 1.4 },
+  title: { color: theme.colors.ink, fontSize: 27, lineHeight: 34, fontWeight: '900' },
+  subtitle: { color: theme.colors.secondary, fontSize: 13, lineHeight: 19 },
+  mapIcon: { width: 46, height: 46, alignItems: 'center', justifyContent: 'center', borderRadius: 15, backgroundColor: theme.colors.softMint },
+  searchShell: { minHeight: 54, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, borderRadius: 16, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
+  searchInput: { flex: 1, minHeight: 50, color: theme.colors.ink, fontSize: 12, paddingVertical: 8 },
+  sectionHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  sectionCopy: { flex: 1, gap: 3 },
+  sectionTitle: { color: theme.colors.ink, fontSize: 16, fontWeight: '900' },
+  helper: { color: theme.colors.secondary, fontSize: 10, lineHeight: 16 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: { minHeight: 36, justifyContent: 'center', paddingHorizontal: 12, borderRadius: 13, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
+  chipSelected: { backgroundColor: theme.colors.primaryDark, borderColor: theme.colors.primaryDark },
+  chipText: { color: theme.colors.secondary, fontSize: 10, fontWeight: '800' },
+  chipTextSelected: { color: theme.colors.white },
+  destinationCard: { minHeight: 70, flexDirection: 'row', alignItems: 'center', gap: 11, padding: 12, borderRadius: 16, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
+  destinationIcon: { width: 42, height: 42, alignItems: 'center', justifyContent: 'center', borderRadius: 14, backgroundColor: theme.colors.softMint },
+  destinationCopy: { flex: 1, gap: 4 },
+  destinationTitle: { color: theme.colors.ink, fontSize: 13, fontWeight: '900' },
+  destinationSummary: { color: theme.colors.secondary, fontSize: 10, lineHeight: 15 },
+  experienceCard: { flexDirection: 'row', alignItems: 'center', gap: 11, padding: 13, borderRadius: 17, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
+  experienceIcon: { width: 42, height: 42, alignItems: 'center', justifyContent: 'center', borderRadius: 14, backgroundColor: theme.colors.softMint },
+  experienceCopy: { flex: 1, gap: 4 },
+  destinationLabel: { color: theme.colors.primary, fontSize: 8, fontWeight: '900', letterSpacing: 1 },
+  experienceTitle: { color: theme.colors.ink, fontSize: 12, fontWeight: '900' },
+  experienceSummary: { color: theme.colors.secondary, fontSize: 10, lineHeight: 15 },
+  meta: { color: theme.colors.primaryDark, fontSize: 9, fontWeight: '800' },
+  notice: { alignItems: 'flex-start', gap: 8, padding: 16, borderRadius: 18, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
+  noticeTitle: { color: theme.colors.ink, fontSize: 13, fontWeight: '900' },
+  noticeText: { color: theme.colors.secondary, fontSize: 10, lineHeight: 16 },
+  retryButton: { minHeight: 37, justifyContent: 'center', paddingHorizontal: 13, borderRadius: 12, backgroundColor: theme.colors.primaryDark },
+  retryText: { color: theme.colors.white, fontSize: 10, fontWeight: '900' },
+  loading: { alignItems: 'center', gap: 10, padding: 22 },
+  emptyText: { color: theme.colors.secondary, fontSize: 11, padding: 12 },
+  mapStatus: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, padding: 12, borderRadius: 14, backgroundColor: theme.colors.softMint },
+  mapStatusText: { flex: 1, color: theme.colors.primaryDark, fontSize: 9, lineHeight: 15 },
+  pressed: { opacity: 0.78, transform: [{ scale: 0.99 }] },
 });
