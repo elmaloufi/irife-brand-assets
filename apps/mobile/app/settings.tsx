@@ -136,14 +136,17 @@ export default function SettingsScreen() {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Account security</Text>
-        <View style={styles.securityCard}>
-          <View style={styles.iconWrap}><Ionicons name="shield-checkmark-outline" size={20} color={theme.colors.primary} /></View>
-          <View style={styles.copy}>
-            <Text style={styles.rowTitle}>{user ? 'Signed in securely' : 'Guest session'}</Text>
-            <Text style={styles.description}>{user ? user.email : 'Sign in to manage your account security.'}</Text>
-            <Text style={styles.securityHint}>Password changes and device-session management will be enabled after their dedicated API endpoints are added.</Text>
-          </View>
-        </View>
+        <Link href="/settings/security" asChild>
+          <Pressable style={styles.securityLink}>
+            <View style={styles.iconWrap}><Ionicons name="shield-checkmark-outline" size={20} color={theme.colors.primary} /></View>
+            <View style={styles.copy}>
+              <Text style={styles.rowTitle}>{user ? 'Password & active sessions' : 'Account security'}</Text>
+              <Text style={styles.description}>{user ? user.email : 'Sign in to manage your account security.'}</Text>
+              <Text style={styles.securityHint}>Review devices, revoke sessions and change your password.</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={theme.colors.secondary} />
+          </Pressable>
+        </Link>
         {user ? <Pressable accessibilityRole="button" disabled={isSubmitting} onPress={() => void signOut().then(() => router.replace('/(tabs)/profile'))} style={styles.signOut}><Ionicons name="log-out-outline" size={17} color={theme.colors.danger} /><Text style={styles.signOutText}>{isSubmitting ? 'Signing out…' : 'Sign out of this device'}</Text></Pressable> : null}
       </View>
 
@@ -187,6 +190,7 @@ const styles = StyleSheet.create({
   status: { color: theme.colors.secondary, fontSize: 9, fontWeight: '900' },
   securityCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 11, padding: 14, borderRadius: 16, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
   securityHint: { color: theme.colors.secondary, fontSize: 9, lineHeight: 14, marginTop: 4 },
+  securityLink: { flexDirection: 'row', alignItems: 'center', gap: 11, padding: 13, borderRadius: 15, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
   signOut: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 14, backgroundColor: theme.colors.dangerSoft },
   signOutText: { color: theme.colors.danger, fontSize: 11, fontWeight: '900' },
   footer: { alignItems: 'center', gap: 4, paddingVertical: 12 },
