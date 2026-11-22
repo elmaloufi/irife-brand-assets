@@ -4,7 +4,7 @@ import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common'
 export class EmailDeliveryService {
   private readonly logger = new Logger(EmailDeliveryService.name);
 
-  async sendPasswordReset(email: string, token: string): Promise<void> {
+  async deliverOneTimeRecoveryCode(email: string, token: string): Promise<void> {
     const apiKey = process.env.RESEND_API_KEY;
     const from = process.env.EMAIL_FROM;
     if (!apiKey || !from) {
