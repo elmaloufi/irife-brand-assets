@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { randomUUID } from 'node:crypto';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
@@ -9,6 +10,24 @@ async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
 
   app.setGlobalPrefix('api/v1');
+  app.getHttpAdapter().getInstance().disable('x-powered-by');
+  app.use((request, response, next) => {
+    response.setHeader('X-Content-Type-Options', 'nosniff');
+    response.setHeader('X-Frame-Options', 'DENY');
+    response.setHeader('Referrer-Policy', 'no-referrer');
+    response.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    response.setHeader('Cross-Origin-Resource-Policy', 'same-site');
+    response.setHeader('X-Request-Id', randomUUID());
+    if (
+      request.path.startsWith('/api/v1/identity') ||
+      request.path.startsWith('/api/v1/me/') ||
+      request.path.startsWith('/api/v1/enquiries')
+    ) {
+      response.setHeader('Cache-Control', 'no-store, private');
+      response.setHeader('Pragma', 'no-cache');
+    }
+    next();
+  });
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
