@@ -90,7 +90,7 @@ export default function SettingsScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('travelPreferences')}</Text>
             <View style={styles.group}>
-              <PreferenceGroup<AppLanguage> title={t('appLanguage')} description={t('chooseLanguage')} value={preferences.language} choices={[{value:'en',label:t('english')},{value:'fr',label:t('french')},{value:'ar',label:t('arabic')}] } onChange={(value) => void update('language', value)} />
+              <PreferenceGroup<AppLanguage> title={t('appLanguage')} description={t('chooseLanguage')} value={preferences.language} choices={[{value:'en',label:t('english')},{value:'fr',label:t('french')},{value:'ar',label:t('arabic')},{value:'es',label:t('spanish')},{value:'de',label:t('german')},{value:'pt',label:t('portuguese')},{value:'it',label:t('italian')},{value:'zh',label:t('chinese')},{value:'ja',label:t('japanese')},{value:'tr',label:t('turkish')},{value:'nl',label:t('dutch')}] } onChange={(value) => void update('language', value)} />
               <View style={styles.separator} />
               <PreferenceGroup<string> title={t('region')} description={t('regionDescription')} value={preferences.region} choices={[
                 {value:'MA',label:'Morocco'},{value:'FR',label:'France'},{value:'ES',label:'Spain'},
