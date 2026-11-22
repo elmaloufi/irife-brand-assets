@@ -1,6 +1,6 @@
 import { Ionicons } from "@react-native-vector-icons/ionicons";
 import { useRouter } from "expo-router";
-import { Pressable, StyleSheet, Text as NativeText, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { AppText as Text } from '../../src/components/AppText';
 import { AppButton } from "../../src/components/AppButton";
 import { ScreenContainer } from "../../src/components/ScreenContainer";
