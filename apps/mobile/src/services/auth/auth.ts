@@ -35,12 +35,34 @@ export function signUp(displayName: string, email: string, password: string): Pr
 }
 export async function refreshSession(current: AuthSession): Promise<AuthSession | null> {
   if (refreshInFlight) return refreshInFlight;
+
+  // A different request may have rotated this token after this caller read its
+  // session. Never replay an older refresh token: the server treats replay as
+  // token theft and revokes the entire session family.
+  const latest = await readStoredSession();
+  if (!latest) return null;
+  if (latest.refreshToken !== current.refreshToken) return latest;
+  if (refreshInFlight) return refreshInFlight;
+
   refreshInFlight = (async () => {
     try {
-      const tokens = await apiRequest<TokenResponse>('/api/v1/identity/refresh', { method: 'POST', body: JSON.stringify({ refreshToken: current.refreshToken }) });
-      const next = { ...current, ...tokens }; await saveSession(next); return next;
-    } catch { await clearStoredSession(); return null; }
-    finally { refreshInFlight = null; }
+      const tokens = await apiRequest<TokenResponse>('/api/v1/identity/refresh', {
+        method: 'POST',
+        body: JSON.stringify({ refreshToken: latest.refreshToken }),
+      });
+      const rotated = { ...latest, ...tokens };
+      await saveSession(rotated);
+      return rotated;
+    } catch {
+      // A concurrent request may have completed rotation while this response
+      // was failing. Preserve the newer credentials if they are already saved.
+      const currentStored = await readStoredSession();
+      if (currentStored && currentStored.refreshToken !== latest.refreshToken) return currentStored;
+      await clearStoredSession();
+      return null;
+    } finally {
+      refreshInFlight = null;
+    }
   })();
   return refreshInFlight;
 }
@@ -70,7 +92,7 @@ export async function restoreSession(session: AuthSession): Promise<AuthSession 
 }
 export async function signOut(session: AuthSession | null): Promise<void> {
   try {
-    if (session) await apiRequest<void>('/api/v1/identity/logout', { method: 'POST', headers: { Authorization: `Bearer ${session.accessToken}` } });
+    if (session) await authenticatedApiRequest<void>('/api/v1/identity/logout', { method: 'POST' });
   } finally { await clearStoredSession(); }
 }
 
