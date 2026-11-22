@@ -68,6 +68,7 @@ model User {
   enquiries      Enquiry[]
   auditEvents    AuditEvent[]
   enquiryActions EnquiryStatusHistory[]
+  savedExperiences SavedExperience[]
 
   @@index([status, createdAt])
 }
@@ -165,6 +166,7 @@ model Experience {
   destination     Destination      @relation(fields: [destinationId], references: [id], onDelete: Restrict)
   enquiries       Enquiry[]
   media           ExperienceMedia[]
+  savedBy         SavedExperience[]
 
   @@unique([providerId, slug])
   @@index([destinationId, status, createdAt])
@@ -242,4 +244,16 @@ model AuthRateLimitBucket {
   expiresAt       DateTime @db.Timestamptz(3)
 
   @@index([expiresAt])
+}
+
+model SavedExperience {
+  id           String     @id @default(uuid()) @db.Uuid
+  userId       String     @db.Uuid
+  experienceId String     @db.Uuid
+  createdAt    DateTime   @default(now()) @db.Timestamptz(3)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  experience   Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, experienceId])
+  @@index([userId, createdAt])
 }

@@ -7,6 +7,7 @@ import { useAuth } from '../../src/auth/AuthProvider';
 import { ScreenContainer } from '../../src/components/ScreenContainer';
 import { getExperienceById } from '../../src/services/api/discovery';
 import { createEnquiry } from '../../src/services/api/enquiries';
+import { saveExperience } from '../../src/services/api/saved';
 import { theme } from '../../src/theme';
 
 export default function ExperienceDetailScreen() {
@@ -19,6 +20,9 @@ export default function ExperienceDetailScreen() {
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -28,6 +32,15 @@ export default function ExperienceDetailScreen() {
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [id]);
+
+  async function saveCurrentExperience() {
+    if (!experience) return;
+    if (!user) { router.push('/auth/sign-in'); return; }
+    setSaving(true); setSaveError(null);
+    try { await saveExperience(experience.id); setSaved(true); }
+    catch (cause) { setSaveError(cause instanceof Error ? cause.message : 'Could not save this experience.'); }
+    finally { setSaving(false); }
+  }
 
   async function submitEnquiry() {
     if (!experience) return;
@@ -60,6 +73,11 @@ export default function ExperienceDetailScreen() {
           {experience.maxGroupSize ? <View style={styles.infoItem}><Ionicons name="people-outline" size={16} color={theme.colors.primary} /><Text style={styles.infoText}>Up to {experience.maxGroupSize}</Text></View> : null}
           <Text style={styles.price}>{experience.priceFrom ? `From ${experience.priceFrom} ${experience.currency}` : 'Contact host for price'}</Text>
         </View>
+        <Pressable accessibilityRole="button" disabled={saving || saved} onPress={() => void saveCurrentExperience()} style={styles.saveButton}>
+          {saving ? <ActivityIndicator size="small" color={theme.colors.primaryDark} /> : <Ionicons name={saved ? 'bookmark' : 'bookmark-outline'} size={17} color={theme.colors.primaryDark} />}
+          <Text style={styles.saveButtonText}>{saving ? 'Saving…' : saved ? 'Saved to your collection' : 'Save this experience'}</Text>
+        </Pressable>
+        {saveError ? <Text accessibilityRole="alert" style={styles.errorText}>{saveError}</Text> : null}
         <View style={styles.card}><Text style={styles.sectionTitle}>About this experience</Text><Text style={styles.body}>{experience.description}</Text></View>
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Ask the local host</Text>
@@ -88,6 +106,8 @@ const styles = StyleSheet.create({
   title: { color: theme.colors.white, fontSize: 24, lineHeight: 30, fontWeight: '900' }, provider: { color: '#D7E5DD', fontSize: 11 },
   infoRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 13 }, infoItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   infoText: { color: theme.colors.secondary, fontSize: 10 }, price: { color: theme.colors.primaryDark, fontSize: 11, fontWeight: '900' },
+  saveButton: { minHeight: 43, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 14, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.softMint },
+  saveButtonText: { color: theme.colors.primaryDark, fontSize: 11, fontWeight: '900' },
   card: { gap: 10, padding: 17, borderRadius: 19, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
   sectionTitle: { color: theme.colors.ink, fontSize: 16, fontWeight: '900' }, body: { color: theme.colors.secondary, fontSize: 12, lineHeight: 20 },
   label: { color: theme.colors.ink, fontSize: 11, fontWeight: '800' }, input: { minHeight: 46, paddingHorizontal: 12, borderRadius: 13, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.background, color: theme.colors.ink, fontSize: 12 },
