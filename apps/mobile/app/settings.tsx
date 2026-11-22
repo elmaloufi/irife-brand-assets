@@ -1,20 +1,13 @@
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { Link, router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '../src/auth/AuthProvider';
 import { ScreenContainer } from '../src/components/ScreenContainer';
 import { signOutAndNavigate } from '../src/auth/sign-out-navigation.mjs';
-import {
-  DEFAULT_PREFERENCES,
-  loadPreferences,
-  savePreferences,
-  type AppAppearance,
-  type AppCurrency,
-  type AppLanguage,
-  type AppPreferences,
-  type DistanceUnit,
-} from '../src/services/preferences/preferences';
+import { usePreferences } from '../src/services/preferences/PreferencesProvider';
+import { translate, resolveLocale } from '../src/services/preferences/locale.mjs';
+import type { AppAppearance, AppCurrency, AppLanguage, AppPreferences, DistanceUnit } from '../src/services/preferences/preferences';
 import { theme } from '../src/theme';
 
 type Choice<T extends string> = { value: T; label: string };
@@ -61,30 +54,18 @@ function PreferenceGroup<T extends string>({
 
 export default function SettingsScreen() {
   const { user, signOut, isSubmitting } = useAuth();
-  const [preferences, setPreferences] = useState<AppPreferences>(DEFAULT_PREFERENCES);
-  const [loading, setLoading] = useState(true);
+  const { preferences, isLoading: loading, error: providerError, updatePreferences } = usePreferences();
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let active = true;
-    void loadPreferences().then((value) => {
-      if (active) setPreferences(value);
-    }).catch(() => {
-      if (active) setSaveError('Could not load preferences from secure device storage.');
-    }).finally(() => {
-      if (active) setLoading(false);
-    });
-    return () => { active = false; };
-  }, []);
+  const t = (key: string) => translate(preferences.language, key);
+  const locale = resolveLocale(preferences.language, preferences.region);
 
   async function update<K extends keyof AppPreferences>(key: K, value: AppPreferences[K]) {
     const next = { ...preferences, [key]: value };
-    setPreferences(next);
     setSaved(false);
     setSaveError(null);
     try {
-      await savePreferences(next);
+      await updatePreferences(next);
       setSaved(true);
     } catch {
       setSaveError('Your change could not be saved. Please try again.');
@@ -95,48 +76,55 @@ export default function SettingsScreen() {
     <ScreenContainer>
       <View style={styles.header}>
         <Link href="/(tabs)/profile" asChild>
-          <Pressable style={styles.back}><Ionicons name="chevron-back" size={19} color={theme.colors.primaryDark} /><Text style={styles.backText}>Account</Text></Pressable>
+          <Pressable style={styles.back}><Ionicons name="chevron-back" size={19} color={theme.colors.primaryDark} /><Text style={styles.backText}>{t('account')}</Text></Pressable>
         </Link>
         <Text style={styles.eyebrow}>MAKE IRIFE YOURS</Text>
-        <Text style={styles.title}>Settings</Text>
-        <Text style={styles.subtitle}>Your language, currency and travel preferences, saved on this device.</Text>
+        <Text style={styles.title}>{t('settings')}</Text>
+        <Text style={styles.subtitle}>Your language, country, currency and travel preferences · {locale}</Text>
       </View>
 
       {loading ? (
-        <View style={styles.loading}><ActivityIndicator color={theme.colors.primary} /><Text style={styles.description}>Loading your preferences…</Text></View>
+        <View style={styles.loading}><ActivityIndicator color={theme.colors.primary} /><Text style={styles.description}>{t('loading')}</Text></View>
       ) : (
         <>
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Travel preferences</Text>
+            <Text style={styles.sectionTitle}>{t('travelPreferences')}</Text>
             <View style={styles.group}>
-              <PreferenceGroup<AppLanguage> title="App language" description="Choose your preferred language" value={preferences.language} choices={[{value:'en',label:'English'},{value:'fr',label:'Français'},{value:'ar',label:'العربية'}]} onChange={(value) => void update('language', value)} />
+              <PreferenceGroup<AppLanguage> title={t('appLanguage')} description={t('chooseLanguage')} value={preferences.language} choices={[{value:'en',label:t('english')},{value:'fr',label:t('french')},{value:'ar',label:t('arabic')}] } onChange={(value) => void update('language', value)} />
               <View style={styles.separator} />
-              <PreferenceGroup<AppCurrency> title="Preferred currency" description="For displaying experience prices" value={preferences.currency} choices={[{value:'MAD',label:'MAD'},{value:'EUR',label:'EUR'},{value:'USD',label:'USD'}]} onChange={(value) => void update('currency', value)} />
+              <PreferenceGroup<string> title={t('region')} description={t('regionDescription')} value={preferences.region} choices={[
+                {value:'MA',label:'Morocco'},{value:'FR',label:'France'},{value:'ES',label:'Spain'},
+                {value:'GB',label:'United Kingdom'},{value:'US',label:'United States'},{value:'CA',label:'Canada'},
+                {value:'DE',label:'Germany'},{value:'NL',label:'Netherlands'},{value:'AE',label:'United Arab Emirates'},
+                {value:'SA',label:'Saudi Arabia'},{value:'BE',label:'Belgium'},
+              ]} onChange={(value) => void update('region', value)} />
               <View style={styles.separator} />
-              <PreferenceGroup<DistanceUnit> title="Distance units" description="Used for directions and nearby places" value={preferences.distanceUnit} choices={[{value:'km',label:'Kilometres'},{value:'mi',label:'Miles'}]} onChange={(value) => void update('distanceUnit', value)} />
+              <PreferenceGroup<AppCurrency> title={t('currency')} description={t('currencyDescription')} value={preferences.currency} choices={[{value:'MAD',label:'MAD'},{value:'EUR',label:'EUR'},{value:'USD',label:'USD'}]} onChange={(value) => void update('currency', value)} />
+              <View style={styles.separator} />
+              <PreferenceGroup<DistanceUnit> title={t('distance')} description={t('distanceDescription')} value={preferences.distanceUnit} choices={[{value:'km',label:t('kilometres')},{value:'mi',label:t('miles')}] } onChange={(value) => void update('distanceUnit', value)} />
             </View>
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Appearance</Text>
+            <Text style={styles.sectionTitle}>{t('appearance')}</Text>
             <View style={styles.group}>
-              <PreferenceGroup<AppAppearance> title="Theme" description="Choose how IRIFE should look" value={preferences.appearance} choices={[{value:'system',label:'System'},{value:'light',label:'Light'},{value:'dark',label:'Dark'}]} onChange={(value) => void update('appearance', value)} />
+              <PreferenceGroup<AppAppearance> title={t('theme')} description={t('themeDescription')} value={preferences.appearance} choices={[{value:'system',label:t('system')},{value:'light',label:t('light')},{value:'dark',label:t('dark')}] } onChange={(value) => void update('appearance', value)} />
             </View>
           </View>
         </>
       )}
 
-      {saved ? <View style={styles.saved}><Ionicons name="checkmark-circle" size={16} color={theme.colors.primary} /><Text style={styles.savedText}>Preferences saved on this device</Text></View> : null}
-      {saveError ? <View style={styles.error}><Ionicons name="alert-circle-outline" size={16} color={theme.colors.danger} /><Text style={styles.errorText}>{saveError}</Text></View> : null}
+      {saved ? <View style={styles.saved}><Ionicons name="checkmark-circle" size={16} color={theme.colors.primary} /><Text style={styles.savedText}>{t('saved')}</Text></View> : null}
+      {(saveError || providerError) ? <View style={styles.error}><Ionicons name="alert-circle-outline" size={16} color={theme.colors.danger} /><Text style={styles.errorText}>{saveError || providerError}</Text></View> : null}
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Privacy & permissions</Text>
+        <Text style={styles.sectionTitle}>{t('privacy')}</Text>
         <View style={styles.infoRow}><View style={styles.iconWrap}><Ionicons name="location-outline" size={19} color={theme.colors.primary} /></View><View style={styles.copy}><Text style={styles.rowTitle}>Location access</Text><Text style={styles.description}>Not requested. IRIFE asks only when you use a location feature.</Text></View><Text style={styles.status}>OFF</Text></View>
         <View style={styles.infoRow}><View style={styles.iconWrap}><Ionicons name="notifications-outline" size={19} color={theme.colors.primary} /></View><View style={styles.copy}><Text style={styles.rowTitle}>Notifications</Text><Text style={styles.description}>Push delivery is not connected yet.</Text></View><Text style={styles.status}>OFF</Text></View>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Account security</Text>
+        <Text style={styles.sectionTitle}>{t('security')}</Text>
         <Link href="/settings/security" asChild>
           <Pressable style={styles.securityLink}>
             <View style={styles.iconWrap}><Ionicons name="shield-checkmark-outline" size={20} color={theme.colors.primary} /></View>
