@@ -12,6 +12,7 @@ export interface AppPreferences {
   currency: AppCurrency;
   appearance: AppAppearance;
   distanceUnit: DistanceUnit;
+  region: string;
 }
 
 export const DEFAULT_PREFERENCES: AppPreferences = {
@@ -19,6 +20,7 @@ export const DEFAULT_PREFERENCES: AppPreferences = {
   currency: 'MAD',
   appearance: 'system',
   distanceUnit: 'km',
+  region: 'MA',
 };
 
 const languages: AppLanguage[] = ['en', 'fr', 'ar'];
@@ -34,6 +36,7 @@ export function validatePreferences(value: unknown): AppPreferences {
     currency: currencies.includes(candidate.currency as AppCurrency) ? candidate.currency as AppCurrency : DEFAULT_PREFERENCES.currency,
     appearance: appearances.includes(candidate.appearance as AppAppearance) ? candidate.appearance as AppAppearance : DEFAULT_PREFERENCES.appearance,
     distanceUnit: distanceUnits.includes(candidate.distanceUnit as DistanceUnit) ? candidate.distanceUnit as DistanceUnit : DEFAULT_PREFERENCES.distanceUnit,
+    region: typeof candidate.region === 'string' && /^[A-Za-z]{2}$/.test(candidate.region) ? candidate.region.toUpperCase() : DEFAULT_PREFERENCES.region,
   };
 }
 
