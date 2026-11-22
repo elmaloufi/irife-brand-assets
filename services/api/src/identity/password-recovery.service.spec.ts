@@ -57,7 +57,7 @@ describe('PasswordRecoveryService', () => {
   it('atomically changes the password and revokes every active session', async () => {
     const oldHash = await hashPassword('the-current-long-password');
     const action = { id: 'action-1', type: 'PASSWORD_RESET', consumedAt: null, expiresAt: new Date(Date.now() + 60_000), user: { id: 'user-1', status: 'ACTIVE' } };
-    const tx = {
+    const transactionClient = {
       identityActionToken: { updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
       user: { update: jest.fn().mockResolvedValue({}) },
       session: {
@@ -68,15 +68,15 @@ describe('PasswordRecoveryService', () => {
     };
     const prisma = {
       identityActionToken: { findUnique: jest.fn().mockResolvedValue(action) },
-      $transaction: jest.fn(async (callback: (tx: typeof tx) => Promise<unknown>) => callback(tx)),
+      $transaction: jest.fn(async (callback: (client: typeof transactionClient) => Promise<unknown>) => callback(transactionClient)),
     };
     const service = new PasswordRecoveryService(prisma as never, { sendPasswordReset: jest.fn() } as never);
     await expect(service.completeReset('valid-reset-token', 'the-new-long-password')).resolves.toEqual({ reset: true });
-    const updateCall = tx.user.update.mock.calls[0]?.[0] as { data: { passwordHash: string } };
+    const updateCall = transactionClient.user.update.mock.calls[0]?.[0] as { data: { passwordHash: string } };
     expect(await verifyPassword('the-new-long-password', updateCall.data.passwordHash)).toBe(true);
     expect(updateCall.data.passwordHash).not.toBe(oldHash);
-    expect(tx.identityActionToken.updateMany).toHaveBeenCalledTimes(1);
-    expect(tx.session.updateMany).toHaveBeenCalledTimes(1);
-    expect(tx.sessionCredential.updateMany).toHaveBeenCalledTimes(1);
+    expect(transactionClient.identityActionToken.updateMany).toHaveBeenCalledTimes(1);
+    expect(transactionClient.session.updateMany).toHaveBeenCalledTimes(1);
+    expect(transactionClient.sessionCredential.updateMany).toHaveBeenCalledTimes(1);
   });
 });
