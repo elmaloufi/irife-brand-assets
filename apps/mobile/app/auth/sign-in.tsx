@@ -87,6 +87,7 @@ export default function SignInScreen() {
             </View>
           </View>
           {error ? <View accessibilityRole="alert" style={styles.error}><Ionicons name="alert-circle-outline" size={17} color={theme.colors.danger} /><Text style={styles.errorText}>{error}</Text></View> : null}
+          <Link href="/auth/reset-password" asChild><Pressable accessibilityRole="link" style={styles.forgotLink}><Text style={styles.link}>Forgot password?</Text></Pressable></Link>
           <Pressable
             accessibilityRole="button"
             disabled={isSubmitting || !email.trim() || password.length < 12}
@@ -129,6 +130,7 @@ const styles = StyleSheet.create({
   disabled: { opacity: 0.45 },
   footnote: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
   footnoteText: { color: theme.colors.secondary, fontSize: 10 },
+  forgotLink: { alignSelf: 'flex-end', paddingVertical: 2 },
   bottom: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: 'auto', paddingTop: 12 },
   bottomText: { color: theme.colors.secondary, fontSize: 12 },
   link: { color: theme.colors.primary, fontSize: 12, fontWeight: '900' },
