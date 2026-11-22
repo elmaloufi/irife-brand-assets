@@ -33,7 +33,7 @@ export default function SignInScreen() {
     clearError();
     try {
       await signIn(email.trim(), password);
-      router.replace('/(tabs)/profile');
+      router.replace('/(tabs)');
     } catch {
       // AuthProvider exposes a safe, user-readable error.
     }
