@@ -3,8 +3,9 @@ import { Link, router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator, Animated, ImageBackground, KeyboardAvoidingView,
-  Platform, Pressable, ScrollView, StatusBar, StyleSheet, Text, TextInput, View,
+  Platform, Pressable, ScrollView, StatusBar, StyleSheet, Text as NativeText, TextInput, View,
 } from 'react-native';
+import { AppText as Text } from '../../src/components/AppText';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../src/auth/AuthProvider';
 import { theme } from '../../src/theme';
