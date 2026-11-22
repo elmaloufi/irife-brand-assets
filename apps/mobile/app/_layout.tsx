@@ -1,10 +1,12 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider } from '../src/auth/AuthProvider';
+import { AppErrorBoundary } from '../src/components/AppErrorBoundary';
 import { theme } from '../src/theme';
 
 export default function RootLayout() {
   return (
+    <AppErrorBoundary>
     <AuthProvider>
       <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.colors.background } }}>
@@ -16,5 +18,6 @@ export default function RootLayout() {
         <Stack.Screen name="settings/security" />
       </Stack>
     </AuthProvider>
+    </AppErrorBoundary>
   );
 }
