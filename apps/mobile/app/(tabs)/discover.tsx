@@ -1,5 +1,5 @@
 import { Ionicons } from '@react-native-vector-icons/ionicons';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -208,6 +208,13 @@ export default function DiscoverScreen() {
                 <Text style={styles.priceText}>
                   {experience.priceFrom ? `From ${experience.priceFrom} ${experience.currency}` : 'Contact provider for price'}
                 </Text>
+                <Pressable accessibilityRole="button" onPress={() => router.push({
+                  pathname: '/enquiries/new',
+                  params: { experienceId: experience.id, title: experience.title, destination: experience.destination.name, provider: experience.provider.name },
+                })} style={styles.enquiryButton}>
+                  <Text style={styles.enquiryButtonText}>Ask about this experience</Text>
+                  <Ionicons name="arrow-forward" size={14} color={theme.colors.white} />
+                </Pressable>
               </View>
             </View>
           ))}
@@ -291,6 +298,8 @@ const styles = StyleSheet.create({
   experienceSummary: { color: theme.colors.secondary, fontSize: 11, lineHeight: 17 },
   experienceMeta: { flexDirection: 'row', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 },
   metaText: { color: theme.colors.secondary, fontSize: 10, fontWeight: '700' },
+  enquiryButton: { minHeight: 38, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 10, paddingHorizontal: 12, borderRadius: 12, backgroundColor: theme.colors.primaryDark },
+  enquiryButtonText: { color: theme.colors.white, fontSize: 10, fontWeight: '900' },
   priceText: { color: theme.colors.primaryDark, fontSize: 12, fontWeight: '900', marginTop: 2 },
   mapLink: { minHeight: 42, flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 },
   mapLinkText: { color: theme.colors.primary, fontSize: 11, fontWeight: '900' },

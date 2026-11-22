@@ -12,6 +12,7 @@ export default function RootLayout() {
         <Stack.Screen name="auth/sign-in" options={{ presentation: 'card' }} />
         <Stack.Screen name="auth/register" options={{ presentation: 'card' }} />
         <Stack.Screen name="settings" />
+        <Stack.Screen name="enquiries/new" options={{ presentation: 'modal' }} />
         <Stack.Screen name="settings/security" />
       </Stack>
     </AuthProvider>
