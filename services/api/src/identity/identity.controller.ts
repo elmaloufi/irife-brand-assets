@@ -9,12 +9,15 @@ import { UpdateProfileDto } from './dto/update-profile.dto.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RefreshDto } from './dto/refresh.dto.js';
 import { RegisterDto } from './dto/register.dto.js';
+import { RequestPasswordResetDto } from './dto/request-password-reset.dto.js';
+import { CompletePasswordResetDto } from './dto/complete-password-reset.dto.js';
+import { PasswordRecoveryService } from './password-recovery.service.js';
 import type { AuthenticatedUser } from './identity.types.js';
 
 @ApiTags('identity')
 @Controller('identity')
 export class IdentityController {
-  constructor(private readonly identity: IdentityService) {}
+  constructor(private readonly identity: IdentityService, private readonly passwordRecovery: PasswordRecoveryService) {}
 
   @Post('register')
   @UseGuards(IdentityRateLimitGuard)
@@ -27,6 +30,20 @@ export class IdentityController {
   @HttpCode(200)
   login(@Body() body: LoginDto) {
     return this.identity.login(body);
+  }
+
+  @Post('password/forgot')
+  @UseGuards(IdentityRateLimitGuard)
+  @HttpCode(202)
+  requestPasswordReset(@Body() body: RequestPasswordResetDto) {
+    return this.passwordRecovery.requestReset(body.email);
+  }
+
+  @Post('password/reset')
+  @UseGuards(IdentityRateLimitGuard)
+  @HttpCode(200)
+  completePasswordReset(@Body() body: CompletePasswordResetDto) {
+    return this.passwordRecovery.completeReset(body.token, body.newPassword);
   }
 
   @Post('refresh')
