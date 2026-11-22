@@ -17,6 +17,7 @@ export default function GuideScreen() {
   const [loadingPlan, setLoadingPlan] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasGenerated, setHasGenerated] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -25,7 +26,7 @@ export default function GuideScreen() {
       .catch((cause: unknown) => { if (active) setError(cause instanceof Error ? cause.message : 'Could not load destinations.'); })
       .finally(() => { if (active) setLoadingDestinations(false); });
     return () => { active = false; };
-  }, []);
+  }, [reloadKey]);
 
   async function buildPlan() {
     if (!selectedDestinationId) {
@@ -92,7 +93,7 @@ export default function GuideScreen() {
         <AppButton label={loadingPlan ? 'Finding experiences…' : 'Build my suggestions'} icon="sparkles" onPress={() => void buildPlan()} disabled={loadingDestinations || loadingPlan || !selectedDestinationId} />
       </View>
 
-      {error ? <View style={styles.errorCard}><Ionicons name="alert-circle-outline" size={19} color={theme.colors.danger} /><Text style={styles.errorText}>{error}</Text><Pressable onPress={() => void buildPlan()}><Text style={styles.retry}>Try again</Text></Pressable></View> : null}
+      {error ? <View style={styles.errorCard}><Ionicons name="alert-circle-outline" size={19} color={theme.colors.danger} /><Text style={styles.errorText}>{error}</Text><Pressable onPress={() => selectedDestinationId ? void buildPlan() : setReloadKey((value) => value + 1)}><Text style={styles.retry}>Try again</Text></Pressable></View> : null}
 
       {loadingPlan ? <View style={styles.loading}><ActivityIndicator size="large" color={theme.colors.primary} /><Text style={styles.helper}>Finding published experiences…</Text></View> : null}
 
