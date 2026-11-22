@@ -68,6 +68,7 @@ model User {
   enquiries      Enquiry[]
   auditEvents    AuditEvent[]
   enquiryActions EnquiryStatusHistory[]
+  savedExperiences SavedExperience[]
 
   @@index([status, createdAt])
 }
@@ -165,6 +166,7 @@ model Experience {
   destination     Destination      @relation(fields: [destinationId], references: [id], onDelete: Restrict)
   enquiries       Enquiry[]
   media           ExperienceMedia[]
+  savedBy         SavedExperience[]
 
   @@unique([providerId, slug])
   @@index([destinationId, status, createdAt])
