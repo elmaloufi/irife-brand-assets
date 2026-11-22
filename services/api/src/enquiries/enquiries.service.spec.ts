@@ -21,6 +21,7 @@ describe('traveler enquiries', () => {
       data: expect.objectContaining({
         travelerId: 'traveler-1', providerId: 'provider-1', experienceId: 'experience-1',
         guestCount: 2, message: 'We would like to visit next week.',
+        history: { create: { fromStatus: null, toStatus: 'PENDING', actorUserId: 'traveler-1', note: 'Enquiry created' } },
       }),
     }));
   });
