@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: irife-ci-${{ github.ref }}
@@ -48,24 +48,11 @@ jobs:
           node-version: 24
           package-manager-cache: false
 
-      - name: Install workspace dependencies and refresh lockfile
-        run: npm install --no-audit --no-fund
+      - name: Install locked workspace dependencies
+        run: npm ci --no-audit --no-fund
 
       - name: Verify Expo SDK 57 native peer versions
         run: npm ls react-native-reanimated react-native-worklets expo-modules-core --workspace=@irife/mobile
-
-      - name: Commit updated npm lockfile to feature branch
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/feat/')
-        run: |
-          git add package-lock.json
-          if git diff --cached --quiet; then
-            echo "package-lock.json is already current"
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "build: lock npm workspace dependencies"
-          git push origin "HEAD:${GITHUB_REF_NAME}"
 
       - name: Validate Prisma schema
         run: npm run db:validate

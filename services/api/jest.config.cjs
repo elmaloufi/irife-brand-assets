@@ -2,6 +2,7 @@ module.exports = {
   rootDir: '.',
   testEnvironment: 'node',
   testMatch: ['<rootDir>/src/**/*.spec.ts'],
+  extensionsToTreatAsEsm: ['.ts'],
   transform: {
     '^.+\\.ts$': [
       '@swc/jest',
@@ -11,7 +12,7 @@ module.exports = {
           transform: { legacyDecorator: true, decoratorMetadata: true },
           target: 'es2022'
         },
-        module: { type: 'commonjs' }
+        module: { type: 'es6' }
       }
     ]
   },

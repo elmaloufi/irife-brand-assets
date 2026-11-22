@@ -6,11 +6,12 @@
 - npm 10.9+
 - Docker Engine with the Compose plugin
 
-## Start PostgreSQL
+## Install dependencies and start PostgreSQL
 
 From the repository root:
 
 ```sh
+npm ci
 cp .env.example .env
 npm run db:up
 npm run db:status
