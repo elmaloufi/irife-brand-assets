@@ -60,6 +60,14 @@ export class EnquiriesService {
         requestedStartAt,
         guestCount: input.guestCount,
         message: input.message.trim(),
+        history: {
+          create: {
+            fromStatus: null,
+            toStatus: 'PENDING',
+            actorUserId: travelerId,
+            note: 'Enquiry created',
+          },
+        },
       },
       select: enquirySelect,
     });
