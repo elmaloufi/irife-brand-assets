@@ -1,5 +1,5 @@
 import { describe, expect, it, jest } from '@jest/globals';
-import { TooManyRequestsException, type ExecutionContext } from '@nestjs/common';
+import { HttpException, type ExecutionContext } from '@nestjs/common';
 import { IdentityRateLimitGuard } from './identity-rate-limit.guard.js';
 
 function contextFor(ip: string, path: string): ExecutionContext {
