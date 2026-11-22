@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   quality:
-    name: Mobile and shared-contract quality
+    name: Mobile, contracts, and API quality
     runs-on: ubuntu-latest
 
     steps:
@@ -33,11 +33,8 @@ jobs:
       - name: Install workspace dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Run mobile and shared-contract tests
+      - name: Run mobile, contract, workspace, and API tests
         run: npm test
 
-      - name: Verify API workspace foundation
-        run: node --test scripts/workspace.test.mjs
-
-      - name: Run shared-contract build and mobile TypeScript check
+      - name: Build contracts and API; type-check mobile
         run: npm run build

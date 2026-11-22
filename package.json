@@ -4,10 +4,14 @@
   "private": true,
   "workspaces": [
     "apps/mobile",
+    "services/api",
     "packages/contracts"
   ],
   "scripts": {
-    "build": "npm run build --workspace=@irife/contracts && npm run typecheck --workspace=@irife/mobile",
-    "test": "node --test apps/mobile/src/navigation/tabs.test.mjs && npm run test --workspace=@irife/contracts"
+    "build": "npm run build --workspace=@irife/contracts && npm run build --workspace=@irife/api && npm run typecheck --workspace=@irife/mobile",
+    "test": "node --test apps/mobile/src/navigation/tabs.test.mjs scripts/workspace.test.mjs && npm run test --workspace=@irife/contracts && npm run test --workspace=@irife/api",
+    "api:dev": "npm run start:dev --workspace=@irife/api",
+    "api:start": "npm run start --workspace=@irife/api",
+    "api:test": "npm run test --workspace=@irife/api"
   }
 }

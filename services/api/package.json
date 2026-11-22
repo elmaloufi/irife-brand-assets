@@ -1,0 +1,38 @@
+{
+  "name": "@irife/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node dist/main.js",
+    "start:dev": "nest start --watch",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "jest --config ./jest.config.cjs --runInBand",
+    "test:e2e": "jest --config ./jest-e2e.config.cjs --runInBand"
+  },
+  "dependencies": {
+    "@nestjs/common": "12.6.0",
+    "@nestjs/config": "12.1.1",
+    "@nestjs/core": "12.6.0",
+    "@nestjs/platform-express": "12.6.0",
+    "@nestjs/swagger": "12.1.2",
+    "class-transformer": "0.5.1",
+    "class-validator": "0.15.1",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2"
+  },
+  "devDependencies": {
+    "@jest/globals": "30.5.2",
+    "@nestjs/cli": "12.0.15",
+    "@nestjs/testing": "12.6.0",
+    "@swc/core": "1.16.22",
+    "@swc/jest": "0.2.39",
+    "@types/express": "5.0.6",
+    "@types/node": "22.20.5",
+    "@types/supertest": "7.2.1",
+    "jest": "30.5.2",
+    "supertest": "7.3.2",
+    "typescript": "6.0.3"
+  }
+}
