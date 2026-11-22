@@ -20,10 +20,10 @@ export function AppText({ style, ...props }: TextProps) {
   const { preferences } = usePreferences();
   const fontFamily = useMemo(() => {
     const weight = StyleSheet.flatten(style)?.fontWeight;
-    const numericWeight = typeof weight === 'number' ? weight : Number.parseInt(String(weight ?? '400'), 10);
+    const numericWeight = typeof weight === 'number' ? weight : weight === 'bold' ? 700 : Number.parseInt(String(weight ?? '400'), 10);
     const variant = numericWeight >= 700 ? 'bold' : numericWeight >= 600 ? 'semibold' : numericWeight >= 500 ? 'medium' : 'regular';
     return preferences.language === 'ar' ? arabicFonts[variant] : latinFonts[variant];
   }, [preferences.language, style]);
 
-  return <NativeText {...props} style={[style, { fontFamily }]} />;
+  return <NativeText {...props} style={[style, { fontFamily, fontWeight: 'normal' }]} />;
 }
