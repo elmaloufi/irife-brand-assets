@@ -7,7 +7,6 @@ import {
   Platform,
   Pressable,
   StyleSheet,
-  Text as NativeText,
   TextInput,
   View,
 } from 'react-native';
