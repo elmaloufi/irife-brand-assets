@@ -1,11 +1,12 @@
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Pressable, StyleSheet, View } from 'react-native';
+import { Image, Pressable, StyleSheet, View } from 'react-native';
 import type { DestinationSummary, ExperienceCard } from '@irife/contracts';
 import { AppButton } from '../../src/components/AppButton';
 import { AppText as Text } from '../../src/components/AppText';
 import { ScreenContainer } from '../../src/components/ScreenContainer';
+import { SkeletonBlock } from '../../src/components/SkeletonBlock';
 import { getDestinations, getExperiences } from '../../src/services/api/discovery';
 import { theme } from '../../src/theme';
 
@@ -80,7 +81,7 @@ export default function HomeScreen() {
           <View style={styles.sectionCopy}><Text style={styles.sectionEyebrow}>START EXPLORING</Text><Text style={styles.sectionTitle}>Discover destinations</Text></View>
           <Pressable accessibilityRole="button" onPress={() => router.push('/(tabs)/discover')} style={styles.seeAll}><Text style={styles.seeAllText}>See all</Text><Ionicons name="arrow-forward" size={15} color={theme.colors.primary} /></Pressable>
         </View>
-        {loading ? <View style={styles.loading}><ActivityIndicator color={theme.colors.primary} /><Text style={styles.helper}>Loading destinations…</Text></View> : destinations.length === 0 ? <View style={styles.notice}><Ionicons name="compass-outline" size={22} color={theme.colors.primary} /><Text style={styles.noticeTitle}>Destinations are being prepared</Text><Text style={styles.noticeText}>Published destinations will appear here as the IRIFE catalogue grows.</Text></View> : (
+        {loading ? <View style={styles.destinationGrid} accessibilityLabel="Loading destinations"><SkeletonBlock width="48%" height={202} radius={22} /><SkeletonBlock width="48%" height={202} radius={22} /></View> : destinations.length === 0 ? <View style={styles.notice}><Ionicons name="compass-outline" size={22} color={theme.colors.primary} /><Text style={styles.noticeTitle}>Destinations are being prepared</Text><Text style={styles.noticeText}>Published destinations will appear here as the IRIFE catalogue grows.</Text></View> : (
           <View style={styles.destinationGrid}>
             {destinations.slice(0, 4).map((destination, index) => (
               <Pressable
@@ -117,7 +118,7 @@ export default function HomeScreen() {
           <View style={styles.sectionCopy}><Text style={styles.sectionEyebrow}>FROM LOCAL HOSTS</Text><Text style={styles.sectionTitle}>Experiences to discover</Text></View>
           <Pressable accessibilityRole="button" onPress={() => router.push('/(tabs)/discover')} style={styles.seeAll}><Text style={styles.seeAllText}>See all</Text><Ionicons name="arrow-forward" size={15} color={theme.colors.primary} /></Pressable>
         </View>
-        {loading ? <View style={styles.loading}><ActivityIndicator color={theme.colors.primary} /><Text style={styles.helper}>Loading experiences…</Text></View> : experiences.length === 0 ? <Text style={styles.helper}>New experiences will appear here when local hosts publish them.</Text> : experiences.map((experience) => (
+        {loading ? <View style={styles.loading} accessibilityLabel="Loading experiences"><SkeletonBlock width="100%" height={82} radius={17} /><SkeletonBlock width="100%" height={82} radius={17} /></View> : experiences.length === 0 ? <Text style={styles.helper}>New experiences will appear here when local hosts publish them.</Text> : experiences.map((experience) => (
           <Pressable key={experience.id} accessibilityRole="button" onPress={() => router.push(`/experiences/${experience.id}`)} style={({ pressed }) => [styles.experienceCard, pressed && styles.pressed]}>
             {experience.media[0]?.url ? <Image source={{ uri: experience.media[0].url }} accessibilityLabel={experience.media[0].altText || experience.title} style={styles.experienceImage} /> : <View style={styles.experienceImageFallback}><Ionicons name="compass-outline" size={24} color={theme.colors.gold} /></View>}
             <View style={styles.experienceCopy}>
