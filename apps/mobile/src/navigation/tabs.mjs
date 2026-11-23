@@ -14,18 +14,19 @@ export const tabs = [
     activeIcon: "compass",
   },
   {
+    route: "guide",
+    title: "ITRI",
+    label: "ITRI",
+    icon: "sparkles-outline",
+    activeIcon: "sparkles",
+    isPortal: true,
+  },
+  {
     route: "map",
     title: "Smart Map",
     label: "Map",
     icon: "map-outline",
     activeIcon: "map",
-  },
-  {
-    route: "guide",
-    title: "AI Guide",
-    label: "Guide",
-    icon: "sparkles-outline",
-    activeIcon: "sparkles",
   },
   {
     route: "profile",
