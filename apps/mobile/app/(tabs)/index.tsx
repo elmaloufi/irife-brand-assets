@@ -86,7 +86,8 @@ export default function HomeScreen() {
               <Pressable key={destination.id} accessibilityRole="button" onPress={() => router.push('/(tabs)/discover')} style={({ pressed }) => [styles.destinationCard, pressed && styles.pressed]}>
                 <View style={styles.destinationIcon}><Ionicons name="location-outline" size={20} color={theme.colors.primaryDark} /></View>
                 <Text style={styles.destinationName}>{destination.name}</Text>
-                <Text style={styles.destinationRegion}>{destination.region || 'Morocco'}</Text>
+                <Text style={styles.destinationRegion}>{destination.region || 'MOROCCO'}</Text>
+                {destination.summary ? <Text style={styles.destinationSummary} numberOfLines={2}>{destination.summary}</Text> : null}
               </Pressable>
             ))}
           </View>
@@ -160,11 +161,12 @@ const styles = StyleSheet.create({
   noticeText: { color: theme.colors.secondary, fontSize: 10, lineHeight: 16 },
   retry: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 11, backgroundColor: theme.colors.primaryDark },
   retryText: { color: theme.colors.white, fontSize: 10, fontWeight: '900' },
-  destinationGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 9 },
-  destinationCard: { width: '48%', minHeight: 96, justifyContent: 'center', gap: 5, padding: 13, borderRadius: 17, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
-  destinationIcon: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center', borderRadius: 11, backgroundColor: theme.colors.softMint },
-  destinationName: { color: theme.colors.ink, fontSize: 13, fontWeight: '900' },
-  destinationRegion: { color: theme.colors.secondary, fontSize: 9 },
+  destinationGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  destinationCard: { width: '48%', minHeight: 126, justifyContent: 'flex-start', gap: 7, padding: 14, borderRadius: 22, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, shadowColor: theme.colors.primaryDark, shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 2 },
+  destinationIcon: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center', borderRadius: 14, backgroundColor: theme.colors.sand },
+  destinationName: { color: theme.colors.ink, fontSize: 14, fontWeight: '900' },
+  destinationRegion: { color: theme.colors.primary, fontSize: 8, fontWeight: '900', letterSpacing: 1 },
+  destinationSummary: { color: theme.colors.secondary, fontSize: 9, lineHeight: 14 },
   experienceCard: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 11, borderRadius: 17, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
   experienceImage: { width: 72, height: 76, borderRadius: 12, backgroundColor: theme.colors.softMint },
   experienceImageFallback: { width: 72, height: 76, alignItems: 'center', justifyContent: 'center', borderRadius: 12, backgroundColor: theme.colors.primaryDark },
