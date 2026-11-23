@@ -45,7 +45,7 @@ export function AnimatedTabIcon({
     outputRange: [0, -2],
   });
 
-  const iconColor = focused ? theme.colors.primaryDark : color;
+  const iconColor = color;
 
   return (
     <Animated.View
