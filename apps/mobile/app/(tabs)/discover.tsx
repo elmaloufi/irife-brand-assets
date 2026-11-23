@@ -13,6 +13,7 @@ import { AppText as Text } from '../../src/components/AppText';
 import { AppTextInput as TextInput } from '../../src/components/AppTextInput';
 import type { DestinationSummary, ExperienceCard } from '@irife/contracts';
 import { ScreenContainer } from '../../src/components/ScreenContainer';
+import { SkeletonBlock } from '../../src/components/SkeletonBlock';
 import { getDestinations, getExperiences } from '../../src/services/api/discovery';
 import { theme } from '../../src/theme';
 
@@ -188,9 +189,9 @@ export default function DiscoverScreen() {
           </Pressable>
         </View>
       ) : experiencesLoading ? (
-        <View style={styles.loadingCard}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={styles.noticeText}>Loading published experiences…</Text>
+        <View style={styles.experienceList} accessibilityLabel="Loading published experiences">
+          <SkeletonBlock width="100%" height={250} radius={20} />
+          <SkeletonBlock width="100%" height={250} radius={20} />
         </View>
       ) : visibleExperiences.length === 0 ? (
         <View style={styles.noticeCard}>
