@@ -11,7 +11,7 @@ export function ScreenContainer({ children, scroll = true, padded = true }: Scre
   const systemScheme = useColorScheme();
   const dark = (preferences.appearance === "system" ? systemScheme : preferences.appearance) === "dark";
   const direction: "rtl" | "ltr" = preferences.language === "ar" ? "rtl" : "ltr";
-  const surface = dark ? "#101B19" : theme.colors.background;
+  const surface = dark ? "#211F19" : theme.colors.background;
   const contentStyle = [styles.content, { direction, backgroundColor: surface }, !padded && styles.unpadded];
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: surface }]}>
