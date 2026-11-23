@@ -82,12 +82,30 @@ export default function HomeScreen() {
         </View>
         {loading ? <View style={styles.loading}><ActivityIndicator color={theme.colors.primary} /><Text style={styles.helper}>Loading destinations…</Text></View> : destinations.length === 0 ? <View style={styles.notice}><Ionicons name="compass-outline" size={22} color={theme.colors.primary} /><Text style={styles.noticeTitle}>Destinations are being prepared</Text><Text style={styles.noticeText}>Published destinations will appear here as the IRIFE catalogue grows.</Text></View> : (
           <View style={styles.destinationGrid}>
-            {destinations.slice(0, 4).map((destination) => (
-              <Pressable key={destination.id} accessibilityRole="button" onPress={() => router.push('/(tabs)/discover')} style={({ pressed }) => [styles.destinationCard, pressed && styles.pressed]}>
-                <View style={styles.destinationIcon}><Ionicons name="location-outline" size={20} color={theme.colors.primaryDark} /></View>
-                <Text style={styles.destinationName}>{destination.name}</Text>
-                <Text style={styles.destinationRegion}>{destination.region || 'MOROCCO'}</Text>
-                {destination.summary ? <Text style={styles.destinationSummary} numberOfLines={2}>{destination.summary}</Text> : null}
+            {destinations.slice(0, 4).map((destination, index) => (
+              <Pressable
+                key={destination.id}
+                accessibilityRole="button"
+                accessibilityLabel={`Explore ${destination.name}`}
+                onPress={() => router.push('/(tabs)/discover')}
+                style={({ pressed }) => [styles.destinationCard, pressed && styles.pressed]}
+              >
+                <View style={[styles.destinationArtwork, index % 2 === 0 ? styles.destinationArtworkOlive : styles.destinationArtworkClay]}>
+                  <View style={styles.destinationSun} />
+                  <View style={styles.destinationArch}>
+                    <View style={styles.destinationArchInner} />
+                  </View>
+                  <View style={styles.destinationArtDiamond} />
+                </View>
+                <View style={styles.destinationCardCopy}>
+                  <Text style={styles.destinationRegion}>{destination.region || 'MOROCCO'}</Text>
+                  <Text style={styles.destinationName}>{destination.name}</Text>
+                  {destination.summary ? <Text style={styles.destinationSummary} numberOfLines={2}>{destination.summary}</Text> : null}
+                  <View style={styles.destinationCardFooter}>
+                    <Text style={styles.destinationExplore}>EXPLORE</Text>
+                    <Ionicons name="arrow-forward" size={13} color={theme.colors.primary} />
+                  </View>
+                </View>
               </Pressable>
             ))}
           </View>
@@ -162,11 +180,20 @@ const styles = StyleSheet.create({
   retry: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 11, backgroundColor: theme.colors.primaryDark },
   retryText: { color: theme.colors.white, fontSize: 10, fontWeight: '900' },
   destinationGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  destinationCard: { width: '48%', minHeight: 126, justifyContent: 'flex-start', gap: 7, padding: 14, borderRadius: 22, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, shadowColor: theme.colors.primaryDark, shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 2 },
-  destinationIcon: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center', borderRadius: 14, backgroundColor: theme.colors.sand },
+  destinationCard: { width: '48%', minHeight: 202, overflow: 'hidden', borderRadius: 22, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, shadowColor: theme.colors.primaryDark, shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 2 },
+  destinationArtwork: { height: 94, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+  destinationArtworkOlive: { backgroundColor: theme.colors.olive },
+  destinationArtworkClay: { backgroundColor: theme.colors.terracotta },
+  destinationSun: { position: 'absolute', width: 54, height: 54, top: 12, right: 18, borderRadius: 27, backgroundColor: theme.colors.heroAccent, opacity: 0.9 },
+  destinationArch: { position: 'absolute', bottom: 0, width: 62, height: 76, alignItems: 'center', justifyContent: 'flex-end', borderWidth: 2, borderBottomWidth: 0, borderColor: 'rgba(255,252,246,0.78)', borderTopLeftRadius: 34, borderTopRightRadius: 34 },
+  destinationArchInner: { width: 30, height: 42, borderWidth: 1.5, borderBottomWidth: 0, borderColor: 'rgba(255,252,246,0.72)', borderTopLeftRadius: 17, borderTopRightRadius: 17 },
+  destinationArtDiamond: { position: 'absolute', top: 14, width: 7, height: 7, borderRadius: 1, backgroundColor: theme.colors.white, transform: [{ rotate: '45deg' }] },
+  destinationCardCopy: { flex: 1, gap: 5, padding: 13 },
   destinationName: { color: theme.colors.ink, fontSize: 14, fontWeight: '900' },
   destinationRegion: { color: theme.colors.primary, fontSize: 8, fontWeight: '900', letterSpacing: 1 },
   destinationSummary: { color: theme.colors.secondary, fontSize: 9, lineHeight: 14 },
+  destinationCardFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto', paddingTop: 4 },
+  destinationExplore: { color: theme.colors.primary, fontSize: 8, fontWeight: '900', letterSpacing: 1.1 },
   experienceCard: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 11, borderRadius: 17, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
   experienceImage: { width: 72, height: 76, borderRadius: 12, backgroundColor: theme.colors.softMint },
   experienceImageFallback: { width: 72, height: 76, alignItems: 'center', justifyContent: 'center', borderRadius: 12, backgroundColor: theme.colors.primaryDark },
