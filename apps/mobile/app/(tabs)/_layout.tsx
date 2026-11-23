@@ -78,11 +78,32 @@ export default function TabLayout() {
                   isPortal={Boolean(tab.isPortal)}
                 />
               ),
-              tabBarButton: (props) => (
+              tabBarButton: ({
+                onPress,
+                onLongPress,
+                onPressIn,
+                style,
+                children,
+                accessibilityRole,
+                accessibilityState,
+                accessibilityLabel,
+                testID,
+              }) => (
                 <Pressable
-                  {...props}
-                  onPressIn={() => Vibration.vibrate(8)}
-                />
+                  style={style}
+                  onPress={onPress}
+                  onLongPress={onLongPress}
+                  onPressIn={(event) => {
+                    onPressIn?.(event);
+                    Vibration.vibrate(8);
+                  }}
+                  accessibilityRole={accessibilityRole}
+                  accessibilityState={accessibilityState}
+                  accessibilityLabel={accessibilityLabel}
+                  testID={testID}
+                >
+                  {children}
+                </Pressable>
               ),
             }}
           />
