@@ -1,7 +1,7 @@
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, type ColorValue } from "react-native";
 
 type ITRIPortalIconProps = {
-  color: string;
+  color: ColorValue;
   focused: boolean;
   size?: number;
 };
