@@ -2,11 +2,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { tabs } from "./tabs.mjs";
 
-test("IRIFE exposes exactly five primary destinations in product order", () => {
+test("IRIFE exposes exactly five primary destinations with ITRI centered", () => {
   assert.deepEqual(
     tabs.map(({ route }) => route),
-    ["index", "discover", "map", "guide", "profile"]
+    ["index", "discover", "guide", "map", "profile"]
   );
+  assert.equal(tabs[2].isPortal, true);
+  assert.equal(tabs[2].title, "ITRI");
 });
 
 test("every primary destination has a unique route and visible label", () => {
@@ -26,7 +28,7 @@ test("each primary destination defines distinct inactive and active icons", () =
   }
 });
 
-test("Requests is not a primary tab and remains an account destination", () => {
+test("Requests remains outside the primary tab list and available as an account destination", () => {
   assert.equal(tabs.some(({ route }) => route === "requests"), false);
   assert.ok(tabs.some(({ route }) => route === "profile"));
 });
