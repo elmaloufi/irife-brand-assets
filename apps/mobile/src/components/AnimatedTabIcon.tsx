@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { AccessibilityInfo, Animated, StyleSheet, View } from "react-native";
+import { AccessibilityInfo, Animated, StyleSheet, View, type ColorValue } from "react-native";
 import { Ionicons } from "@react-native-vector-icons/ionicons";
 import type { ComponentProps } from "react";
 import { ITRIPortalIcon } from "./ITRIPortalIcon";
@@ -11,7 +11,7 @@ type AnimatedTabIconProps = {
   icon: IconName;
   activeIcon: IconName;
   focused: boolean;
-  color: string;
+  color: ColorValue;
   isPortal?: boolean;
 };
 
