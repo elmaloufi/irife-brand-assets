@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import { Animated, StyleSheet, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { AccessibilityInfo, Animated, StyleSheet, View } from "react-native";
 import { Ionicons } from "@react-native-vector-icons/ionicons";
 import type { ComponentProps } from "react";
 import { ITRIPortalIcon } from "./ITRIPortalIcon";
@@ -23,8 +23,25 @@ export function AnimatedTabIcon({
   isPortal = false,
 }: AnimatedTabIconProps) {
   const progress = useRef(new Animated.Value(focused ? 1 : 0)).current;
+  const [reduceMotion, setReduceMotion] = useState(false);
 
   useEffect(() => {
+    let mounted = true;
+    void AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
+      if (mounted) setReduceMotion(enabled);
+    });
+    const subscription = AccessibilityInfo.addEventListener("reduceMotionChanged", setReduceMotion);
+    return () => {
+      mounted = false;
+      subscription.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (reduceMotion) {
+      progress.setValue(focused ? 1 : 0);
+      return;
+    }
     const animation = Animated.spring(progress, {
       toValue: focused ? 1 : 0,
       damping: 16,
@@ -34,7 +51,7 @@ export function AnimatedTabIcon({
     });
     animation.start();
     return () => animation.stop();
-  }, [focused, progress]);
+  }, [focused, progress, reduceMotion]);
 
   const scale = progress.interpolate({
     inputRange: [0, 1],
