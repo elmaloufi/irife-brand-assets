@@ -63,6 +63,8 @@ Copy `.env.example` to `.env` and adjust values only for your local environment.
 
 ### Start PostgreSQL and prepare the database
 
+PostgreSQL 18 stores its cluster under the versioned path and the Compose file mounts the parent data directory. The current configuration uses a new named volume, irife_postgres_data_v18. Any older irife_postgres_data volume is deliberately left untouched; back it up and migrate it separately before removing it.
+
 ```bash
 docker compose up -d postgres
 npm run db:validate
