@@ -19,6 +19,8 @@ const POLICIES: Record<string, WindowPolicy> = {
   '/identity/refresh': { max: 20, windowMs: 15 * 60 * 1000 },
   '/identity/password/forgot': { max: 3, windowMs: 60 * 60 * 1000 },
   '/identity/password/reset': { max: 5, windowMs: 15 * 60 * 1000 },
+  '/identity/email/verification/request': { max: 5, windowMs: 60 * 60 * 1000 },
+  '/identity/email/verification/confirm': { max: 10, windowMs: 15 * 60 * 1000 },
 };
 
 @Injectable()
@@ -47,7 +49,7 @@ export class IdentityRateLimitGuard implements CanActivate {
       .update(`${request.method}:${route}:${clientAddress}`)
       .digest('hex');
 
-    const rows = await this.prisma.$queryRaw<RateLimitRow[]>`
+    const rows = await this.prisma.$queryRaw<RateLimitRow[]>\`
       INSERT INTO "AuthRateLimitBucket" ("keyHash", "windowStartedAt", "requestCount", "expiresAt")
       VALUES (${keyHash}, ${now}, 1, ${expiresAt})
       ON CONFLICT ("keyHash") DO UPDATE SET
@@ -64,7 +66,7 @@ export class IdentityRateLimitGuard implements CanActivate {
           ELSE "AuthRateLimitBucket"."expiresAt"
         END
       RETURNING "requestCount", "windowStartedAt"
-    `;
+    \`;
 
     this.cleanupCounter += 1;
     if (this.cleanupCounter >= 500) {
