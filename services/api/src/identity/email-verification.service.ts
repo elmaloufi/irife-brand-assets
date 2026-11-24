@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger, NotFoundException, TooManyRequestsException } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { EmailDeliveryService } from '../notifications/email-delivery.service.js';
 import { createOpaqueToken, hashToken } from './token.util.js';
@@ -42,7 +42,7 @@ export class EmailVerificationService {
         where: { userId, type: 'EMAIL_VERIFICATION', createdAt: { gt: dayAgo } },
       });
       if (dailyCount >= MAX_DAILY_REQUESTS) {
-        throw new TooManyRequestsException({ code: 'VERIFICATION_RESEND_LIMIT', message: 'Too many verification emails. Please try again later.' });
+        throw new HttpException({ code: 'VERIFICATION_RESEND_LIMIT', message: 'Too many verification emails. Please try again later.' }, HttpStatus.TOO_MANY_REQUESTS);
       }
 
       const token = createOpaqueToken();
