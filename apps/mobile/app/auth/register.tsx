@@ -12,6 +12,7 @@ import {
 import { AppTextInput as TextInput } from '../../src/components/AppTextInput';
 import { AppText as Text } from '../../src/components/AppText';
 import { useAuth } from '../../src/auth/AuthProvider';
+import { requestEmailVerification } from '../../src/services/auth/auth';
 import { ScreenContainer } from '../../src/components/ScreenContainer';
 import { theme } from '../../src/theme';
 
@@ -27,7 +28,14 @@ export default function RegisterScreen() {
     clearError();
     try {
       await signUp(displayName, email, password);
-      router.replace('/(tabs)');
+      let sent = false;
+      try {
+        await requestEmailVerification();
+        sent = true;
+      } catch {
+        // Keep the authenticated session and let the traveler retry from the verification screen.
+      }
+      router.replace({ pathname: '/auth/verify-email', params: { sent: sent ? '1' : '0' } });
     } catch {
       // The provider exposes a safe, user-readable error.
     }
