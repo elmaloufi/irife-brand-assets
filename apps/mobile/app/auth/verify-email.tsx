@@ -89,7 +89,7 @@ export default function VerifyEmailScreen() {
               onChangeText={setToken}
             />
           </View>
-          {feedback ? <Text accessibilityRole="status" style={styles.feedback}>{feedback}</Text> : null}
+          {feedback ? <Text style={styles.feedback}>{feedback}</Text> : null}
           {error ? <View accessibilityRole="alert" style={styles.error}><Ionicons name="alert-circle-outline" size={17} color={theme.colors.danger} /><Text style={styles.errorText}>{error}</Text></View> : null}
           <Pressable accessibilityRole="button" disabled={isSubmitting || token.trim().length < 32} onPress={() => void confirm()} style={[styles.primaryButton, (isSubmitting || token.trim().length < 32) && styles.disabled]}>
             {isSubmitting ? <ActivityIndicator color={theme.colors.white} /> : <><Text style={styles.primaryText}>Confirm email</Text><Ionicons name="checkmark" size={18} color={theme.colors.white} /></>}
