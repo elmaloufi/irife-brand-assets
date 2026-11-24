@@ -22,7 +22,7 @@ export class IdentityService {
     try {
       user = await this.prisma.user.create({
         data: { email, displayName: input.displayName.trim(), passwordHash },
-        select: { id: true, email: true, displayName: true, role: true },
+        select: { id: true, email: true, emailVerifiedAt: true, displayName: true, role: true },
       });
     } catch (error) {
       if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
@@ -36,7 +36,7 @@ export class IdentityService {
   async login(input: { email: string; password: string }) {
     const user = await this.prisma.user.findUnique({
       where: { email: input.email.trim().toLowerCase() },
-      select: { id: true, email: true, displayName: true, role: true, status: true, passwordHash: true },
+      select: { id: true, email: true, emailVerifiedAt: true, displayName: true, role: true, status: true, passwordHash: true },
     });
     // Perform the same expensive password derivation for unknown and suspended accounts
     // to reduce account-enumeration timing differences.
@@ -79,7 +79,7 @@ export class IdentityService {
       data: { lastUsedAt: now },
     });
     const user = credential.session.user;
-    return { id: user.id, email: user.email, displayName: user.displayName, role: user.role, sessionId: credential.sessionId };
+    return { id: user.id, email: user.email, emailVerifiedAt: user.emailVerifiedAt?.toISOString() ?? null, displayName: user.displayName, role: user.role, sessionId: credential.sessionId };
   }
 
   async refresh(refreshToken: string) {
@@ -187,7 +187,7 @@ export class IdentityService {
     ]);
   }
 
-  private async createSession(user: { id: string; email: string; displayName: string; role: 'TRAVELER' | 'ADMIN' }) {
+  private async createSession(user: { id: string; email: string; emailVerifiedAt: Date | null; displayName: string; role: 'TRAVELER' | 'ADMIN' }) {
     const now = new Date();
     const sessionId = randomUUID();
     const familyId = randomUUID();
