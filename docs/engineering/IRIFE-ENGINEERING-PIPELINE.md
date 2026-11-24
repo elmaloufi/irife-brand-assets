@@ -49,6 +49,10 @@ Configure repository rules for main in GitHub Settings:
 
 Branch protection is a repository setting and must be verified in GitHub Settings; adding workflow files alone does not enforce it.
 
+## Known security gate findings
+
+The first lockfile audit reported six high-severity vulnerability instances, including decode-uri-component through Expo Router and effect through Prisma configuration. The audit intentionally remains blocking. Do not run npm audit fix --force: npm reports that doing so would downgrade core Expo Router, Prisma and Jest packages. Resolve these through compatible upstream releases or a separately tested, narrowly scoped dependency override, then rerun the complete mobile/API test and build suite.
+
 ## Validation boundaries
 
 A green GitHub CI run proves the checks executed in GitHub's Linux runner. It does not replace physical Android/iOS runtime testing, review of real production configuration, external penetration testing or explicit release approval.
