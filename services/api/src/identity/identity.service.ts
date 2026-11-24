@@ -59,7 +59,7 @@ export class IdentityService {
     return this.prisma.user.update({
       where: { id: userId },
       data: { displayName: normalizedName },
-      select: { id: true, email: true, displayName: true, role: true },
+      select: { id: true, email: true, emailVerifiedAt: true, displayName: true, role: true },
     });
   }
 
