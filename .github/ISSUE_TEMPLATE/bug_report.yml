@@ -1,0 +1,52 @@
+name: Bug report
+description: Report a reproducible defect in IRIFE.
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: "Search existing issues first. Do not include secrets, credentials, personal data, or exploitable vulnerability details. Use SECURITY.md for security reports."
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Describe the observed behavior and expected behavior.
+      placeholder: Clear, concise description.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - Mobile app
+        - Backend API
+        - Database
+        - ITRI / AI
+        - Design / accessibility
+        - Documentation
+        - CI / developer tooling
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: List the smallest reliable reproduction steps.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Device/OS, app version or commit, Node version, and relevant runtime details. Remove private data.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Logs or screenshots
+      description: Attach sanitized evidence. Redact tokens, emails, phone numbers, and identifiers.
+    validations:
+      required: false
