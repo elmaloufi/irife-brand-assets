@@ -20,7 +20,8 @@ This repository uses GitHub Actions to validate the Expo mobile workspace, share
 - npm installs from the committed root package-lock.json.
 - CI uses an ephemeral PostgreSQL 18 service and local-only test credentials.
 - Prisma migrations are applied to a clean database before tests.
-- The Docker Compose workflow validates the checked-in PostgreSQL service. It does not build an application image because this repository currently has no root Dockerfile.
+- The Docker Compose workflow validates the checked-in PostgreSQL 18 service using its versioned PGDATA path and a parent-directory volume mount. It does not build an application image because this repository currently has no root Dockerfile.
+- The Compose volume was moved to irife_postgres_data_v18; any old irife_postgres_data volume is intentionally preserved for a separately planned backup/migration.
 
 ## Security model
 
