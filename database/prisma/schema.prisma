@@ -91,6 +91,7 @@ model IdentityActionToken {
   user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, type, consumedAt])
+  @@index([userId, type, createdAt])
   @@index([expiresAt])
 }
 
