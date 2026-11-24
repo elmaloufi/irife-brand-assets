@@ -26,6 +26,8 @@ export function ZelligeOrnament({ size = 112, opacity = 0.42 }: ZelligeOrnamentP
 const styles = StyleSheet.create({
   frame: {
     position: "absolute",
+    top: 10,
+    right: 10,
     alignItems: "center",
     justifyContent: "center",
   },
