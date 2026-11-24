@@ -6,6 +6,7 @@ import type { DestinationSummary, ExperienceCard } from '@irife/contracts';
 import { AppButton } from '../../src/components/AppButton';
 import { AppText as Text } from '../../src/components/AppText';
 import { ScreenContainer } from '../../src/components/ScreenContainer';
+import { ZelligeOrnament } from '../../src/components/ZelligeOrnament';
 import { getDestinations, getExperiences } from '../../src/services/api/discovery';
 import { theme } from '../../src/theme';
 
@@ -65,6 +66,7 @@ export default function HomeScreen() {
 
       <View style={styles.hero}>
         <View style={styles.heroOrb} />
+        <ZelligeOrnament size={148} opacity={0.32} />
         <View style={styles.heroContent}>
           <View style={styles.heroTag}><Ionicons name="sparkles" size={13} color={theme.colors.primaryDark} /><Text style={styles.heroTagText}>YOUR JOURNEY, YOUR WAY</Text></View>
           <Text style={styles.heroTitle}>Let Morocco surprise you.</Text>
@@ -126,10 +128,10 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   brand: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  brandMark: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(215,175,110,0.72)', backgroundColor: theme.colors.primaryDark },
+  brandMark: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 16, borderWidth: 1, borderColor: theme.colors.champagne, backgroundColor: theme.colors.deepForest },
   brandName: { color: theme.colors.ink, fontSize: 16, fontWeight: '900', letterSpacing: 2.2 },
   brandCaption: { marginTop: 2, color: theme.colors.secondary, fontSize: 8, fontWeight: '800', letterSpacing: 1.1 },
-  settingsButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 16, backgroundColor: theme.colors.softMint, borderWidth: 1, borderColor: theme.colors.border },
+  settingsButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 16, backgroundColor: theme.colors.peachSoft, borderWidth: 1, borderColor: theme.colors.border },
   intro: { gap: 8, paddingTop: 5 },
   welcomeLine: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   welcomeDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: theme.colors.terracotta },
@@ -138,9 +140,9 @@ const styles = StyleSheet.create({
   subtitle: { color: theme.colors.secondary, fontSize: 13, lineHeight: 20 },
   search: { minHeight: 58, flexDirection: 'row', alignItems: 'center', gap: 11, paddingLeft: 15, paddingRight: 8, borderWidth: 1, borderColor: theme.colors.border, borderRadius: 18, backgroundColor: theme.colors.surface },
   searchText: { flex: 1, color: theme.colors.secondary, fontSize: 12 },
-  searchAction: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center', borderRadius: 13, backgroundColor: theme.colors.primary },
+  searchAction: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center', borderRadius: 13, backgroundColor: theme.colors.teal },
   hero: { minHeight: 230, justifyContent: 'center', overflow: 'hidden', padding: 20, borderRadius: 25, backgroundColor: theme.colors.hero },
-  heroOrb: { position: 'absolute', width: 190, height: 190, right: -65, top: -80, borderRadius: 95, backgroundColor: '#2D6659', opacity: 0.7 },
+  heroOrb: { position: 'absolute', width: 190, height: 190, right: -65, top: -80, borderRadius: 95, backgroundColor: theme.colors.teal, opacity: 0.7 },
   heroContent: { gap: 10 },
   heroTag: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 99, backgroundColor: theme.colors.heroAccent },
   heroTagText: { color: theme.colors.primaryDark, fontSize: 8, fontWeight: '900', letterSpacing: 0.7 },
@@ -162,7 +164,7 @@ const styles = StyleSheet.create({
   retryText: { color: theme.colors.white, fontSize: 10, fontWeight: '900' },
   destinationGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 9 },
   destinationCard: { width: '48%', minHeight: 96, justifyContent: 'center', gap: 5, padding: 13, borderRadius: 17, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
-  destinationIcon: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center', borderRadius: 11, backgroundColor: theme.colors.softMint },
+  destinationIcon: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center', borderRadius: 11, backgroundColor: theme.colors.peachSoft },
   destinationName: { color: theme.colors.ink, fontSize: 13, fontWeight: '900' },
   destinationRegion: { color: theme.colors.secondary, fontSize: 9 },
   experienceCard: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 11, borderRadius: 17, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
