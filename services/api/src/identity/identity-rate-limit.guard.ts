@@ -49,7 +49,7 @@ export class IdentityRateLimitGuard implements CanActivate {
       .update(`${request.method}:${route}:${clientAddress}`)
       .digest('hex');
 
-    const rows = await this.prisma.$queryRaw<RateLimitRow[]>\`
+    const rows = await this.prisma.$queryRaw<RateLimitRow[]>`
       INSERT INTO "AuthRateLimitBucket" ("keyHash", "windowStartedAt", "requestCount", "expiresAt")
       VALUES (${keyHash}, ${now}, 1, ${expiresAt})
       ON CONFLICT ("keyHash") DO UPDATE SET
@@ -66,7 +66,7 @@ export class IdentityRateLimitGuard implements CanActivate {
           ELSE "AuthRateLimitBucket"."expiresAt"
         END
       RETURNING "requestCount", "windowStartedAt"
-    \`;
+    `;
 
     this.cleanupCounter += 1;
     if (this.cleanupCounter >= 500) {
