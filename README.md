@@ -103,6 +103,12 @@ See [Mobile setup](apps/mobile/README.md) for device-specific instructions.
 - Every change should include relevant tests and documentation.
 - Production deployment and payment integrations require separate design review and explicit approval.
 
+## Contributing
+
+IRIFE welcomes public contributions across mobile, backend, security, design, AI/ITRI, and documentation. Start with [CONTRIBUTING.md](CONTRIBUTING.md), review the [Code of Conduct](CODE_OF_CONDUCT.md), and use the issue and pull request templates. Security issues must follow [SECURITY.md](SECURITY.md) and must not be disclosed publicly.
+
+See the [community and contributor operations guide](docs/engineering/COMMUNITY-AND-CONTRIBUTOR-OPERATIONS.md) for workstreams, review expectations, access levels, and the mixed volunteer/paid contribution model.
+
 ## Project documentation
 
 - [Product requirements](docs/product/IRIFE-PRD.md)
