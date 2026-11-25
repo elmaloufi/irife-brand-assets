@@ -34,7 +34,10 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
-      - name: Install current lockfile
+      - name: Resolve lockfile including reviewed security overrides
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Install resolved lockfile
         run: npm ci --no-audit --no-fund
 
       - name: Apply npm fixes within declared semver ranges only
@@ -128,7 +131,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git switch -c "$branch"
-          git add package-lock.json apps/mobile/package.json
+          git add package.json package-lock.json apps/mobile/package.json
           git diff --cached --check
           git commit -m "fix(security): apply validated non-breaking dependency updates"
           git push origin "$branch"
