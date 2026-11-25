@@ -38,6 +38,8 @@ jobs:
             "Mobile validation"
             "iOS validation"
             "Docker validation"
+            "Dependency health"
+            "Expo Doctor"
           )
 
           failed=0
@@ -66,4 +68,4 @@ jobs:
             exit 1
           fi
 
-          echo "All post-merge CI and security gates passed for $TARGET_SHA."
+          echo "All CI and security gates passed for $TARGET_SHA."
