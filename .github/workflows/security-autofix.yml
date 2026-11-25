@@ -61,10 +61,10 @@ jobs:
         continue-on-error: true
         run: npm ci --no-audit --no-fund
 
-      - name: Enforce zero high and critical advisories
+      - name: Enforce zero moderate-or-higher advisories
         id: audit
         continue-on-error: true
-        run: npm audit --audit-level=high
+        run: npm audit --audit-level=moderate
 
       - name: Enforce Expo SDK compatibility
         id: expo_check
