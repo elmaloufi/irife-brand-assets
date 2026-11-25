@@ -1,0 +1,51 @@
+name: iOS validation
+
+on:
+  push:
+    branches:
+      - main
+      - 'feat/**'
+      - 'fix/**'
+      - 'chore/**'
+      - 'security/**'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ios:
+    name: iOS Expo prebuild and bundle
+    runs-on: macos-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install locked workspace dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Verify Expo SDK dependency compatibility
+        working-directory: apps/mobile
+        run: npx expo install --check
+
+      - name: Generate iOS native project
+        working-directory: apps/mobile
+        run: npx expo prebuild --platform ios --no-install
+
+      - name: Export iOS JavaScript bundle and assets
+        working-directory: apps/mobile
+        run: npx expo export --platform ios --output-dir "$RUNNER_TEMP/irife-ios-export"
