@@ -1,0 +1,51 @@
+name: Docker validation
+
+on:
+  push:
+    branches:
+      - main
+      - 'feat/**'
+      - 'fix/**'
+      - 'chore/**'
+      - 'security/**'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compose:
+    name: Validate Docker Compose and PostgreSQL service
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Validate Compose configuration
+        run: docker compose config --quiet
+
+      - name: Start PostgreSQL service
+        run: docker compose up --detach postgres
+
+      - name: Wait for PostgreSQL readiness
+        run: |
+          for attempt in {1..30}; do
+            if docker compose exec -T postgres pg_isready -U irife -d irife; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "PostgreSQL did not become ready in time."
+          docker compose logs postgres
+          exit 1
+
+      - name: Stop test services
+        if: always()
+        run: docker compose down --volumes --remove-orphans
