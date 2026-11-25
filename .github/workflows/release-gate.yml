@@ -1,0 +1,69 @@
+name: Release gate
+
+# Run manually against a commit on the selected branch after all CI/security
+# workflows have completed. Dependency review is a PR-only gate and should
+# also be configured as a required status check in repository rules.
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  verify:
+    name: Verify required checks for this commit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Verify GitHub CLI
+        run: gh --version
+
+      - name: Require successful CI and security workflows
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET_SHA: ${{ github.sha }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          runs="$(gh run list --repo "$REPOSITORY" --commit "$TARGET_SHA" \
+            --json name,status,conclusion,createdAt --limit 100)"
+
+          required_workflows=(
+            "IRIFE CI"
+            "CodeQL"
+            "Secret scan"
+            "API security"
+            "Mobile validation"
+            "iOS validation"
+            "Docker validation"
+          )
+
+          failed=0
+          for workflow in "${required_workflows[@]}"; do
+            latest="$(jq -c --arg name "$workflow" \
+              '[.[] | select(.name == $name)] | sort_by(.createdAt) | last // empty' \
+              <<< "$runs")"
+
+            if [[ -z "$latest" ]]; then
+              echo "::error::No run found for required workflow: $workflow"
+              failed=1
+              continue
+            fi
+
+            status="$(jq -r '.status' <<< "$latest")"
+            conclusion="$(jq -r '.conclusion // "none"' <<< "$latest")"
+
+            echo "$workflow: status=$status conclusion=$conclusion"
+            if [[ "$status" != "completed" || "$conclusion" != "success" ]]; then
+              echo "::error::$workflow has not completed successfully for $TARGET_SHA"
+              failed=1
+            fi
+          done
+
+          if [[ "$failed" -ne 0 ]]; then
+            exit 1
+          fi
+
+          echo "All post-merge CI and security gates passed for $TARGET_SHA."
