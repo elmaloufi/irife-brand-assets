@@ -38,8 +38,8 @@ jobs:
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
 
-      - name: Reject high and critical npm advisories
-        run: npm audit --audit-level=high
+      - name: Reject moderate, high, and critical npm advisories
+        run: npm audit --audit-level=moderate
 
       - name: Validate Expo SDK compatibility
         working-directory: apps/mobile
