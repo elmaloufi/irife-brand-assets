@@ -98,8 +98,6 @@ jobs:
         id: publish
         if: always()
         env:
-          NPM_FIX: ${{ steps.npm_fix.outcome }}
-          EXPO_FIX: ${{ steps.expo_fix.outcome }}
           CLEAN_INSTALL: ${{ steps.clean_install.outcome }}
           AUDIT: ${{ steps.audit.outcome }}
           EXPO_CHECK: ${{ steps.expo_check.outcome }}
@@ -110,7 +108,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for result in "$NPM_FIX" "$EXPO_FIX" "$CLEAN_INSTALL" "$AUDIT" "$EXPO_CHECK" "$TESTS" "$BUILD" "$ANDROID" "$IOS"; do
+          # npm audit fix / expo install --fix are best-effort; the final audit,
+          # compatibility checks and complete regression suite are the actual gates.
+          for result in "$CLEAN_INSTALL" "$AUDIT" "$EXPO_CHECK" "$TESTS" "$BUILD" "$ANDROID" "$IOS"; do
             if [[ "$result" != "success" ]]; then
               echo "::error::A remediation or validation step failed. No branch will be published."
               echo "changed=false" >> "$GITHUB_OUTPUT"
