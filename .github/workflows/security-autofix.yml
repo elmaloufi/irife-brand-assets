@@ -1,0 +1,156 @@
+name: Security auto-fix
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '10 5 * * 1'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: irife-security-autofix
+  cancel-in-progress: false
+
+jobs:
+  remediate:
+    name: Apply compatible fixes and validate before publishing branch
+    runs-on: macos-latest
+    timeout-minutes: 60
+    outputs:
+      branch: ${{ steps.publish.outputs.branch }}
+      changed: ${{ steps.publish.outputs.changed }}
+    steps:
+      - name: Checkout triggering ref
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install current lockfile
+        run: npm ci --no-audit --no-fund
+
+      - name: Apply npm fixes within declared semver ranges only
+        id: npm_fix
+        continue-on-error: true
+        run: |
+          npm audit fix --no-fund
+          # Deliberately no --force, --legacy-peer-deps, or package downgrade.
+
+      - name: Align packages to the installed Expo SDK
+        id: expo_fix
+        continue-on-error: true
+        working-directory: apps/mobile
+        run: npx expo install --fix
+
+      - name: Reinstall from the updated lockfile
+        id: clean_install
+        continue-on-error: true
+        run: npm ci --no-audit --no-fund
+
+      - name: Enforce zero high and critical advisories
+        id: audit
+        continue-on-error: true
+        run: npm audit --audit-level=high
+
+      - name: Enforce Expo SDK compatibility
+        id: expo_check
+        continue-on-error: true
+        working-directory: apps/mobile
+        run: |
+          npx expo install --check
+          npx expo-doctor
+
+      - name: Run complete test suite
+        id: tests
+        continue-on-error: true
+        run: npm test
+
+      - name: Build all workspaces
+        id: build
+        continue-on-error: true
+        run: npm run build
+
+      - name: Validate Android native generation and bundle
+        id: android
+        continue-on-error: true
+        working-directory: apps/mobile
+        run: |
+          npx expo prebuild --platform android --no-install
+          npx expo export --platform android --output-dir "$RUNNER_TEMP/irife-autofix-android"
+
+      - name: Validate iOS native generation and bundle
+        id: ios
+        continue-on-error: true
+        working-directory: apps/mobile
+        run: |
+          npx expo prebuild --platform ios --no-install
+          npx expo export --platform ios --output-dir "$RUNNER_TEMP/irife-autofix-ios"
+
+      - name: Publish only a fully validated security branch
+        id: publish
+        if: always()
+        env:
+          NPM_FIX: ${{ steps.npm_fix.outcome }}
+          EXPO_FIX: ${{ steps.expo_fix.outcome }}
+          CLEAN_INSTALL: ${{ steps.clean_install.outcome }}
+          AUDIT: ${{ steps.audit.outcome }}
+          EXPO_CHECK: ${{ steps.expo_check.outcome }}
+          TESTS: ${{ steps.tests.outcome }}
+          BUILD: ${{ steps.build.outcome }}
+          ANDROID: ${{ steps.android.outcome }}
+          IOS: ${{ steps.ios.outcome }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for result in "$NPM_FIX" "$EXPO_FIX" "$CLEAN_INSTALL" "$AUDIT" "$EXPO_CHECK" "$TESTS" "$BUILD" "$ANDROID" "$IOS"; do
+            if [[ "$result" != "success" ]]; then
+              echo "::error::A remediation or validation step failed. No branch will be published."
+              echo "changed=false" >> "$GITHUB_OUTPUT"
+              exit 1
+            fi
+          done
+
+          if [[ -z "$(git status --porcelain)" ]]; then
+            echo "No dependency changes were required."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          branch="security/auto-fix-$(date -u +%Y%m%d)-${GITHUB_RUN_ID}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add package-lock.json apps/mobile/package.json
+          git diff --cached --check
+          git commit -m "fix(security): apply validated non-breaking dependency updates"
+          git push origin "$branch"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Upload remediation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: irife-security-autofix-evidence-${{ github.run_id }}
+          path: |
+            package.json
+            package-lock.json
+            apps/mobile/package.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  regression:
+    name: Re-test published remediation branch
+    needs: remediate
+    if: needs.remediate.outputs.changed == 'true'
+    uses: ./.github/workflows/security-regression.yml
+    with:
+      ref: ${{ needs.remediate.outputs.branch }}
