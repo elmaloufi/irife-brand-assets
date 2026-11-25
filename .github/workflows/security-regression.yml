@@ -1,0 +1,70 @@
+name: Security regression
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: Branch or commit containing the remediation candidate
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch or commit to validate
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  regression:
+    name: Security, API, and mobile regression
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout candidate
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Reject high and critical npm advisories
+        run: npm audit --audit-level=high
+
+      - name: Validate Expo SDK compatibility
+        working-directory: apps/mobile
+        run: |
+          npx expo install --check
+          npx expo-doctor
+
+      - name: Run complete test suite
+        run: npm test
+
+      - name: Build all workspaces
+        run: npm run build
+
+      - name: Generate Android native project
+        working-directory: apps/mobile
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Generate iOS native project
+        working-directory: apps/mobile
+        run: npx expo prebuild --platform ios --no-install
+
+      - name: Export Android bundle
+        working-directory: apps/mobile
+        run: npx expo export --platform android --output-dir "$RUNNER_TEMP/irife-security-android"
+
+      - name: Export iOS bundle
+        working-directory: apps/mobile
+        run: npx expo export --platform ios --output-dir "$RUNNER_TEMP/irife-security-ios"
