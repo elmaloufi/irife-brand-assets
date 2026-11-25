@@ -5,7 +5,9 @@ on:
     branches:
       - main
       - 'feat/**'
+      - 'fix/**'
       - 'chore/**'
+      - 'security/**'
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -19,17 +21,18 @@ concurrency:
 
 jobs:
   quality:
-    name: Mobile, contracts, and API quality
+    name: Workspace quality, tests, and build
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     env:
-      DATABASE_URL: postgresql://irife:irife_local_dev_only@127.0.0.1:5432/irife?schema=public
+      DATABASE_URL: postgresql://irife:irife_ci_only@127.0.0.1:5432/irife?schema=public
 
     services:
       postgres:
         image: postgres:18-alpine
         env:
           POSTGRES_USER: irife
-          POSTGRES_PASSWORD: irife_local_dev_only
+          POSTGRES_PASSWORD: irife_ci_only
           POSTGRES_DB: irife
         ports:
           - 5432:5432
@@ -47,13 +50,15 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: 24
-          package-manager-cache: false
+          cache: npm
+          cache-dependency-path: package-lock.json
 
       - name: Install locked workspace dependencies
         run: npm ci --no-audit --no-fund
 
-      - name: Verify Expo SDK 57 native peer versions
-        run: npm ls react-native-reanimated react-native-worklets expo-modules-core --workspace=@irife/mobile
+      - name: Check Expo native dependency compatibility
+        working-directory: apps/mobile
+        run: npx expo install --check
 
       - name: Validate Prisma schema
         run: npm run db:validate
@@ -61,7 +66,7 @@ jobs:
       - name: Apply migrations to clean PostgreSQL
         run: npm run db:migrate
 
-      - name: Run mobile, contract, workspace, and API tests
+      - name: Run workspace, mobile, contracts, and API tests
         run: npm test
 
       - name: Build contracts and API; type-check mobile
