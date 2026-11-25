@@ -1,0 +1,106 @@
+name: Dependency health
+
+on:
+  push:
+    branches:
+      - main
+      - 'security/**'
+      - 'chore/**'
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '20 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dependency-health-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    name: Dependency and Expo health report
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Capture complete npm audit report
+        shell: bash
+        run: |
+          set +e
+          npm audit --json > "$RUNNER_TEMP/npm-audit.json"
+          audit_exit=$?
+          set -e
+          node - "$RUNNER_TEMP/npm-audit.json" "$RUNNER_TEMP/dependency-health.md" <<'NODE'
+          const fs = require('node:fs');
+          const [input, output] = process.argv.slice(2);
+          const report = JSON.parse(fs.readFileSync(input, 'utf8'));
+          const counts = report.metadata?.vulnerabilities ?? {};
+          const lines = [
+            '# IRIFE dependency health',
+            '',
+            '| Severity | Count |',
+            '|---|---:|',
+            ...['critical','high','moderate','low','info'].map(k => `| ${k} | ${counts[k] ?? 0} |`),
+            '',
+            '## Advisory packages',
+            '',
+            ...Object.entries(report.vulnerabilities ?? {}).map(([name, v]) =>
+              `- **${name}** — ${v.severity}; direct: ${v.isDirect}; fix available: ${JSON.stringify(v.fixAvailable)}`),
+            '',
+            'The complete machine-readable npm audit report is attached as an artifact.'
+          ];
+          fs.writeFileSync(output, lines.join('\n'));
+          console.log(lines.join('\n'));
+          NODE
+          echo "audit_exit=$audit_exit" >> "$GITHUB_OUTPUT"
+        id: audit_report
+
+      - name: Check Expo SDK compatibility
+        id: expo_check
+        continue-on-error: true
+        working-directory: apps/mobile
+        run: npx expo install --check
+
+      - name: Run Expo Doctor
+        id: expo_doctor
+        continue-on-error: true
+        working-directory: apps/mobile
+        run: npx expo-doctor
+
+      - name: Upload dependency health evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: irife-dependency-health-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/npm-audit.json
+            ${{ runner.temp }}/dependency-health.md
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Fail when high-risk findings or Expo drift remain
+        if: always()
+        env:
+          AUDIT_EXIT: ${{ steps.audit_report.outputs.audit_exit }}
+          EXPO_CHECK: ${{ steps.expo_check.outcome }}
+          EXPO_DOCTOR: ${{ steps.expo_doctor.outcome }}
+        run: |
+          if [[ "$AUDIT_EXIT" != "0" || "$EXPO_CHECK" != "success" || "$EXPO_DOCTOR" != "success" ]]; then
+            echo "::error::Dependency or Expo health findings remain. Review the uploaded report."
+            exit 1
+          fi
