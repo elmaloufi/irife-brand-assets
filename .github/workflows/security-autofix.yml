@@ -1,6 +1,9 @@
 name: Security auto-fix
 
 on:
+  push:
+    branches:
+      - 'security/remediate-dependencies'
   workflow_dispatch:
   schedule:
     - cron: '10 5 * * 1'
@@ -127,10 +130,15 @@ jobs:
             exit 0
           fi
 
-          branch="security/auto-fix-$(date -u +%Y%m%d)-${GITHUB_RUN_ID}"
+          current_branch="$GITHUB_REF_NAME"
+          if [[ "$current_branch" == "security/remediate-dependencies" ]]; then
+            branch="$current_branch"
+          else
+            branch="security/auto-fix-$(date -u +%Y%m%d)-${GITHUB_RUN_ID}"
+            git switch -c "$branch"
+          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git switch -c "$branch"
           git add package.json package-lock.json apps/mobile/package.json
           git diff --cached --check
           git commit -m "fix(security): apply validated non-breaking dependency updates"
