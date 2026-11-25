@@ -39,6 +39,8 @@ jobs:
         run: npm ci --no-audit --no-fund
 
       - name: Verify Expo SDK dependency compatibility
+        id: expo_compatibility
+        continue-on-error: true
         working-directory: apps/mobile
         run: npx expo install --check
 
@@ -49,3 +51,13 @@ jobs:
       - name: Export iOS JavaScript bundle and assets
         working-directory: apps/mobile
         run: npx expo export --platform ios --output-dir "$RUNNER_TEMP/irife-ios-export"
+
+      - name: Enforce Expo SDK dependency compatibility
+        if: always()
+        env:
+          EXPO_COMPATIBILITY_OUTCOME: ${{ steps.expo_compatibility.outcome }}
+        run: |
+          if [[ "$EXPO_COMPATIBILITY_OUTCOME" != "success" ]]; then
+            echo "::error::Expo SDK dependency versions are out of sync; see the compatibility report above."
+            exit 1
+          fi
