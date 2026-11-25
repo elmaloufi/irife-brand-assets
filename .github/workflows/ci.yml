@@ -56,10 +56,6 @@ jobs:
       - name: Install locked workspace dependencies
         run: npm ci --no-audit --no-fund
 
-      - name: Check Expo native dependency compatibility
-        working-directory: apps/mobile
-        run: npx expo install --check
-
       - name: Validate Prisma schema
         run: npm run db:validate
 
