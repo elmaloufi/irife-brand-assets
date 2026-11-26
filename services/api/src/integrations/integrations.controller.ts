@@ -6,9 +6,11 @@ import { GeocodingQueryDto } from './dto/geocoding-query.dto.js';
 import { ItRiChatDto } from './dto/itri-chat.dto.js';
 import { WeatherQueryDto } from './dto/weather-query.dto.js';
 import { IntegrationsService } from './integrations.service.js';
+import { ProviderRateLimitGuard } from './provider-rate-limit.guard.js';
 
 @ApiTags('integrations')
 @Controller('integrations')
+@UseGuards(ProviderRateLimitGuard)
 export class IntegrationsController {
   constructor(private readonly integrations: IntegrationsService) {}
 
@@ -28,7 +30,7 @@ export class IntegrationsController {
   }
 
   @Post('itri/chat')
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(ProviderRateLimitGuard, AccessTokenGuard)
   @ApiBearerAuth()
   chat(@Body() body: ItRiChatDto) {
     return this.integrations.chat(body.messages);
