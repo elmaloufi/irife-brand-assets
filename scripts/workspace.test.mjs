@@ -22,7 +22,21 @@ test('API workspace exists and exposes the required lifecycle scripts', () => {
   }
 });
 
-test('mobile animation peers remain aligned with the Expo SDK 57 native matrix', () => {
-  assert.equal(mobile.dependencies['react-native-reanimated'], '~4.5.1');
-  assert.equal(mobile.dependencies['react-native-worklets'], '~0.10.4');
+test('mobile native dependencies match the Expo SDK 57 compatibility matrix', () => {
+  const expected = {
+    expo: '57.0.34',
+    'expo-constants': '57.0.25',
+    'expo-router': '57.0.32',
+    'react-native': '0.86.3',
+    'react-native-reanimated': '4.5.1',
+    'react-native-worklets': '0.10.1',
+  };
+
+  for (const [name, version] of Object.entries(expected)) {
+    assert.equal(
+      mobile.dependencies[name],
+      version,
+      `${name} must remain pinned to Expo SDK 57's verified version`,
+    );
+  }
 });
