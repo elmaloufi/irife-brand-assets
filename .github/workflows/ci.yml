@@ -55,6 +55,12 @@ jobs:
       - name: Verify Expo SDK 57 native peer versions
         run: npm ls react-native-reanimated react-native-worklets expo-modules-core --workspace=@irife/mobile
 
+      - name: Verify Expo SDK package compatibility
+        run: npm run expo:check --workspace=@irife/mobile
+
+      - name: Export Android JavaScript bundle
+        run: npm run mobile:export
+
       - name: Validate Prisma schema
         run: npm run db:validate
 
