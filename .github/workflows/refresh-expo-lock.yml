@@ -6,6 +6,7 @@ on:
       - feat/irife-expo-foundation-gate1
     paths:
       - apps/mobile/package.json
+      - .github/workflows/refresh-expo-lock.yml
   workflow_dispatch:
 
 permissions:
@@ -34,6 +35,9 @@ jobs:
 
       - name: Regenerate npm lockfile
         run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Install dependencies from regenerated lockfile
+        run: npm ci --no-audit --no-fund
 
       - name: Verify Expo dependency alignment
         run: npm run expo:check --workspace=@irife/mobile
