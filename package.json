@@ -10,6 +10,8 @@
   "scripts": {
     "build": "npm run build --workspace=@irife/contracts && npm run build --workspace=@irife/api && npm run typecheck --workspace=@irife/mobile",
     "test": "node --test apps/mobile/src/navigation/tabs.test.mjs apps/mobile/src/auth/sign-out-navigation.test.mjs apps/mobile/src/services/api/request-cache.test.mjs apps/mobile/src/services/auth/session-error.test.mjs apps/mobile/src/auth/restore-session-fallback.test.mjs apps/mobile/src/auth/route-access.test.mjs apps/mobile/src/services/preferences/locale.test.mjs apps/mobile/src/services/preferences/regions.test.mjs scripts/workspace.test.mjs && npm run test --workspace=@irife/contracts && npm run test --workspace=@irife/api",
+    "mobile:start": "npm run start --workspace=@irife/mobile",
+    "mobile:export": "npm run export:android --workspace=@irife/mobile",
     "api:dev": "npm run start:dev --workspace=@irife/api",
     "api:start": "npm run start --workspace=@irife/api",
     "api:test": "npm run test --workspace=@irife/api",
