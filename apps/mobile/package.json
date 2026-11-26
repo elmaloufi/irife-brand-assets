@@ -7,7 +7,9 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "expo:check": "expo install --check",
+    "export:android": "expo export --platform android --output-dir /tmp/irife-expo-export"
   },
   "dependencies": {
     "@react-native-vector-icons/ionicons": "^14.0.0",
