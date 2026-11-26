@@ -2,6 +2,8 @@
 
 Status: pending physical-device execution.
 
+The Expo API service layer now exposes typed calls for weather, explicit geocoding, city events, and authenticated ITRI chat. These adapters are ready for screen-level integration; the existing app screens have not yet been wired to them.
+
 ## Preconditions
 - API and PostgreSQL are running in a non-production environment.
 - Android build points to the reachable API host (not localhost on the handset).
