@@ -1,0 +1,40 @@
+name: Claude Code - IRIFE Engineering
+
+on:
+  workflow_dispatch:
+    inputs:
+      task:
+        description: "Engineering task or audit request for Claude"
+        required: true
+        type: string
+        default: "Perform a read-only engineering audit of IRIFE: inspect architecture, identify confirmed bugs and security risks, run safe checks where possible, and report findings with file paths and evidence. Do not modify files."
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: claude-irife-${{ github.event.issue.number || github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  claude:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Claude Code
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: ${{ github.event_name == 'workflow_dispatch' && inputs.task || '' }}
+          claude_args: |
+            --max-turns 8
+            --permission-mode default
