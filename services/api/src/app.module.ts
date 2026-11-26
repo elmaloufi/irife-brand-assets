@@ -7,8 +7,9 @@ import { IdentityModule } from './identity/identity.module.js';
 import { EnquiriesModule } from './enquiries/enquiries.module.js';
 import { SavedExperiencesModule } from './saved/saved-experiences.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
+import { IntegrationsModule } from './integrations/integrations.module.js';
 
 @Module({
-  imports: [AppConfigModule, PrismaModule, HealthModule, DestinationsModule, ExperiencesModule, IdentityModule, EnquiriesModule, SavedExperiencesModule],
+  imports: [AppConfigModule, PrismaModule, HealthModule, DestinationsModule, ExperiencesModule, IdentityModule, EnquiriesModule, SavedExperiencesModule, IntegrationsModule],
 })
 export class AppModule {}
