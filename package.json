@@ -23,5 +23,10 @@
   "engines": {
     "node": ">=22.22.3",
     "npm": ">=10.9.0"
+  },
+  "overrides": {
+    "@prisma/config": {
+      "effect": "3.22.1"
+    }
   }
 }
