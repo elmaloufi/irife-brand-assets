@@ -38,9 +38,14 @@ jobs:
         if: steps.android.outputs.available == 'true'
         run: ./gradlew build
 
+      - name: Check Appknox token configuration
+        id: appknox_token
+        if: secrets.APPKNOX_ACCESS_TOKEN != ''
+        run: echo "configured=true" >> "$GITHUB_OUTPUT"
+
       - name: Appknox GitHub action
         id: appknox
-        if: steps.android.outputs.available == 'true' && secrets.APPKNOX_ACCESS_TOKEN != ''
+        if: steps.android.outputs.available == 'true' && steps.appknox_token.outputs.configured == 'true'
         uses: appknox/appknox-github-action@b7d2bfb2321d5544e97bffcba48557234ab953a4
         with:
           appknox_access_token: ${{ secrets.APPKNOX_ACCESS_TOKEN }}
@@ -62,7 +67,7 @@ jobs:
           echo "## Appknox mobile security scan" >> "$GITHUB_STEP_SUMMARY"
           if [ "${{ steps.android.outputs.available }}" != "true" ]; then
             echo "- Result: SKIPPED - no root Gradle wrapper is present." >> "$GITHUB_STEP_SUMMARY"
-          elif [ -z "${{ secrets.APPKNOX_ACCESS_TOKEN }}" ]; then
+          elif [ "${{ steps.appknox_token.outputs.configured }}" != "true" ]; then
             echo "- Result: SKIPPED - APPKNOX_ACCESS_TOKEN is not configured." >> "$GITHUB_STEP_SUMMARY"
           else
             echo "- Result: Android build and Appknox scan were attempted; inspect step results above." >> "$GITHUB_STEP_SUMMARY"
