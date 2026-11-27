@@ -1,18 +1,11 @@
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
-# This workflow will install Deno then run `deno lint` and `deno test`.
-# For more information see: https://github.com/denoland/setup-deno
-
+# This workflow runs only when a root Deno project configuration is present.
 name: Deno
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
   pull_request:
-    branches: ["main"]
+    branches: [ "main" ]
 
 permissions:
   contents: read
@@ -20,23 +13,42 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Setup repo
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Detect Deno project
+        id: deno_project
+        shell: bash
+        run: |
+          if [ -f deno.json ] || [ -f deno.jsonc ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Deno checks skipped: no root deno.json or deno.jsonc is present."
+          fi
 
       - name: Setup Deno
-        # uses: denoland/setup-deno@v1
-        uses: denoland/setup-deno@61fe2df320078202e33d7d5ad347e7dcfa0e8f31  # v1.1.2
+        if: steps.deno_project.outputs.available == 'true'
+        uses: denoland/setup-deno@61fe2df320078202e33d7d5ad347e7dcfa0e8f31 # v1.1.2
         with:
-          deno-version: v1.x
-
-      # Uncomment this step to verify the use of 'deno fmt' on each commit.
-      # - name: Verify formatting
-      #   run: deno fmt --check
+          deno-version: v2.x
 
       - name: Run linter
+        if: steps.deno_project.outputs.available == 'true'
         run: deno lint
 
       - name: Run tests
+        if: steps.deno_project.outputs.available == 'true'
         run: deno test -A
+
+      - name: Deno status summary
+        if: always()
+        shell: bash
+        run: |
+          echo "## Deno checks" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ steps.deno_project.outputs.available }}" = "true" ]; then
+            echo "- Result: Deno lint and tests were run; inspect the step results above." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "- Result: SKIPPED - this repository does not currently declare a root Deno project." >> "$GITHUB_STEP_SUMMARY"
+          fi

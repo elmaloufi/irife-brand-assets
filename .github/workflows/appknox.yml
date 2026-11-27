@@ -1,24 +1,5 @@
-# This workflow uses actions that are not certified by GitHub. They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support documentation.
-#
-# Appknox: Leader in Mobile Application Security Testing Solutions <https://www.appknox.com/>
-#
-# To use this workflow, you must be an existing Appknox customer with GitHub Advanced Security (GHAS) enabled for your
-# repository.
-#
-# If you *are not* an existing customer, click here to contact us for licensing and pricing details:
-# <https://www.appknox.com/free-trial>.
-#
-# Instructions:
-#
-# 1. In your repository settings, navigate to 'Secrets' and click on 'New repository secret.' Name the
-#    secret APPKNOX_ACCESS_TOKEN and paste your appknox user token into the value field. If you don't have a appknox token
-#    or need to generate a new one for GitHub, visit the Appknox Platform, go to Account Settings->Developer Settings
-#    and create a token labeled GitHub
-#
-# 2. Refer to the detailed workflow below, make any required adjustments, and then save it to your repository. After the
-#    action executes, check the 'Security' tab for results
-
+# Appknox mobile security scanning is enabled only when the Android Gradle wrapper
+# and APPKNOX_ACCESS_TOKEN are configured in this repository.
 name: Appknox
 
 on:
@@ -26,29 +7,68 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+
+permissions:
+  contents: read
+  security-events: write
+
 jobs:
   appknox:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Detect Android Gradle wrapper
+        id: android
+        shell: bash
+        run: |
+          if [ -f gradlew ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Appknox scan skipped: no root gradlew wrapper is present."
+          fi
 
       - name: Grant execute permission for gradlew
+        if: steps.android.outputs.available == 'true'
         run: chmod +x gradlew
 
-      - name: Build the app
-        run: ./gradlew build                                         # Update this to build your Android or iOS application
+      - name: Build the Android app
+        if: steps.android.outputs.available == 'true'
+        run: ./gradlew build
+
+      - name: Check Appknox token configuration
+        id: appknox_token
+        if: secrets.APPKNOX_ACCESS_TOKEN != ''
+        run: echo "configured=true" >> "$GITHUB_OUTPUT"
 
       - name: Appknox GitHub action
+        id: appknox
+        if: steps.android.outputs.available == 'true' && steps.appknox_token.outputs.configured == 'true'
         uses: appknox/appknox-github-action@b7d2bfb2321d5544e97bffcba48557234ab953a4
         with:
           appknox_access_token: ${{ secrets.APPKNOX_ACCESS_TOKEN }}
-          file_path: app/build/outputs/apk/debug/app-debug.apk        # Specify the path to your .ipa or .apk here
-          risk_threshold: MEDIUM                                      # Update this to desired risk threshold [LOW, MEDIUM, HIGH, CRITICAL]
+          file_path: app/build/outputs/apk/debug/app-debug.apk
+          risk_threshold: MEDIUM
           sarif: Enable
 
       - name: Upload SARIF to GHAS
-        if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        if: always() && steps.appknox.outcome == 'success' && hashFiles('report.sarif') != ''
+        uses: github/codeql-action/upload-sarif@5eb3ed6614230b1931d5c08df9e096e4ba524f21 # v3.28.17
         with:
           sarif_file: report.sarif
+          wait-for-processing: true
+
+      - name: Appknox status summary
+        if: always()
+        shell: bash
+        run: |
+          echo "## Appknox mobile security scan" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ steps.android.outputs.available }}" != "true" ]; then
+            echo "- Result: SKIPPED - no root Gradle wrapper is present." >> "$GITHUB_STEP_SUMMARY"
+          elif [ "${{ steps.appknox_token.outputs.configured }}" != "true" ]; then
+            echo "- Result: SKIPPED - APPKNOX_ACCESS_TOKEN is not configured." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "- Result: Android build and Appknox scan were attempted; inspect step results above." >> "$GITHUB_STEP_SUMMARY"
+          fi
