@@ -33,9 +33,10 @@ function getRefreshEncryptionKey(): Buffer {
   return key;
 }
 
-function encryptRefreshResponse(response: RefreshTokenResponse): string {
+function encryptRefreshResponse(response: RefreshTokenResponse, credentialId: string, requestId: string): string {
   const iv = randomBytes(12);
   const cipher = createCipheriv('aes-256-gcm', getRefreshEncryptionKey(), iv);
+  cipher.setAAD(Buffer.from(`${credentialId}:${requestId}`, 'utf8'));
   const ciphertext = Buffer.concat([
     cipher.update(JSON.stringify(response), 'utf8'),
     cipher.final(),
@@ -45,7 +46,7 @@ function encryptRefreshResponse(response: RefreshTokenResponse): string {
     .join('.');
 }
 
-function decryptRefreshResponse(value: string): RefreshTokenResponse {
+function decryptRefreshResponse(value: string, credentialId: string, requestId: string): RefreshTokenResponse {
   const [ivText, tagText, ciphertextText, extra] = value.split('.');
   if (!ivText || !tagText || !ciphertextText || extra !== undefined) {
     throw new Error('Stored refresh rotation response is malformed');
@@ -55,6 +56,7 @@ function decryptRefreshResponse(value: string): RefreshTokenResponse {
     getRefreshEncryptionKey(),
     Buffer.from(ivText, 'base64url'),
   );
+  decipher.setAAD(Buffer.from(`${credentialId}:${requestId}`, 'utf8'));
   decipher.setAuthTag(Buffer.from(tagText, 'base64url'));
   const plaintext = Buffer.concat([
     decipher.update(Buffer.from(ciphertextText, 'base64url')),
@@ -183,7 +185,7 @@ export class IdentityService {
         ) {
           return {
             kind: 'retry' as const,
-            response: decryptRefreshResponse(credential.rotationResponseCiphertext),
+            response: decryptRefreshResponse(credential.rotationResponseCiphertext, credential.id, effectiveRequestId),
           };
         }
 
@@ -216,7 +218,7 @@ export class IdentityService {
         data: {
           consumedAt: now,
           rotationRequestId: effectiveRequestId,
-          rotationResponseCiphertext: encryptRefreshResponse(response),
+          rotationResponseCiphertext: encryptRefreshResponse(response, credential.id, effectiveRequestId),
           rotationResponseExpiresAt: new Date(now.getTime() + REFRESH_RETRY_WINDOW_MS),
         },
       });
