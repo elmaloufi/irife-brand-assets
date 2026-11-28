@@ -5,4 +5,9 @@ export class RefreshDto {
   @MinLength(32)
   @MaxLength(128)
   refreshToken!: string;
+
+  @IsString()
+  @MinLength(16)
+  @MaxLength(128)
+  requestId!: string;
 }
