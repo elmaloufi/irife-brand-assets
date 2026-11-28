@@ -26,6 +26,11 @@ export class PasswordRecoveryService {
     const action = await this.prisma.$transaction(async (tx) => {
       // Serialize reset-token issuance per account so concurrent requests cannot leave multiple live tokens.
       await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${user.id}::uuid FOR UPDATE`;
+      const currentUser = await tx.user.findUnique({
+        where: { id: user.id },
+        select: { status: true },
+      });
+      if (!currentUser || currentUser.status !== 'ACTIVE') return null;
       await tx.identityActionToken.updateMany({
         where: { userId: user.id, type: 'PASSWORD_RESET', consumedAt: null },
         data: { consumedAt: now },
@@ -40,6 +45,7 @@ export class PasswordRecoveryService {
         select: { id: true },
       });
     }, { isolationLevel: 'Serializable' });
+    if (!action) return { accepted: true };
 
     try {
       await this.email.deliverOneTimeRecoveryCode(user.email, token);
@@ -70,6 +76,13 @@ export class PasswordRecoveryService {
       // Lock the account row before consuming the token. This serializes competing reset tokens,
       // password changes, and session creation for the same user.
       await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${action.user.id}::uuid FOR UPDATE`;
+      const currentUser = await tx.user.findUnique({
+        where: { id: action.user.id },
+        select: { status: true },
+      });
+      if (!currentUser || currentUser.status !== 'ACTIVE') {
+        throw new BadRequestException({ code: 'INVALID_OR_EXPIRED_RESET_TOKEN', message: 'This password reset link is invalid or has expired. Request a new link.' });
+      }
       const consumed = await tx.identityActionToken.updateMany({
         where: { id: action.id, consumedAt: null, expiresAt: { gt: now } },
         data: { consumedAt: now },
