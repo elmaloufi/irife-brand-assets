@@ -37,7 +37,7 @@ export class IdentityRateLimitGuard implements CanActivate {
       : originalPath;
     // Express route matching is case-insensitive and accepts trailing slashes
     // by default. Normalize both so those variants cannot bypass auth limits.
-    const route = pathWithoutPrefix.replace(/\\/+$/, '') || '/';
+    const route = pathWithoutPrefix.replace(/\/+$/, '') || '/';
     const policy = POLICIES[route];
     if (!policy) return true;
 
