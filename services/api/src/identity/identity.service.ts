@@ -30,7 +30,7 @@ export class IdentityService {
       }
       throw error;
     }
-    return this.createSession(user);
+    return this.createSession(user, passwordHash);
   }
 
   async login(input: { email: string; password: string }) {
@@ -48,7 +48,7 @@ export class IdentityService {
       throw new UnauthorizedException({ code: 'INVALID_CREDENTIALS', message: 'Email or password is incorrect.' });
     }
     const { status: _status, passwordHash: _passwordHash, ...safeUser } = user;
-    return this.createSession(safeUser);
+    return this.createSession(safeUser, user.passwordHash);
   }
 
   async updateProfile(userId: string, displayName: string) {
@@ -166,17 +166,34 @@ export class IdentityService {
       throw new UnauthorizedException({ code: 'CURRENT_PASSWORD_INVALID', message: 'The current password is incorrect.' });
     }
     const passwordHash = await hashPassword(newPassword);
-    const sessions = await this.prisma.session.findMany({
-      where: { userId, revokedAt: null },
-      select: { id: true },
-    });
-    const sessionIds = sessions.map((session) => session.id);
     const now = new Date();
-    await this.prisma.$transaction([
-      this.prisma.user.update({ where: { id: userId }, data: { passwordHash } }),
-      this.prisma.session.updateMany({ where: { id: { in: sessionIds }, revokedAt: null }, data: { revokedAt: now } }),
-      this.prisma.sessionCredential.updateMany({ where: { sessionId: { in: sessionIds }, revokedAt: null }, data: { revokedAt: now } }),
-    ]);
+    await this.prisma.$transaction(async (tx) => {
+      // Serialize password changes, reset flows, and session creation for this account.
+      await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${userId}::uuid FOR UPDATE`;
+      const current = await tx.user.findUnique({
+        where: { id: userId },
+        select: { passwordHash: true, status: true },
+      });
+      if (!current || current.status !== 'ACTIVE' || current.passwordHash !== user.passwordHash) {
+        throw new UnauthorizedException({ code: 'CURRENT_PASSWORD_INVALID', message: 'The current password is incorrect.' });
+      }
+      await tx.user.update({ where: { id: userId }, data: { passwordHash } });
+      const sessions = await tx.session.findMany({
+        where: { userId, revokedAt: null },
+        select: { id: true },
+      });
+      const sessionIds = sessions.map((session) => session.id);
+      if (sessionIds.length > 0) {
+        await tx.session.updateMany({
+          where: { id: { in: sessionIds }, revokedAt: null },
+          data: { revokedAt: now },
+        });
+        await tx.sessionCredential.updateMany({
+          where: { sessionId: { in: sessionIds }, revokedAt: null },
+          data: { revokedAt: now },
+        });
+      }
+    }, { isolationLevel: 'Serializable' });
   }
 
   async logout(sessionId: string): Promise<void> {
@@ -187,21 +204,35 @@ export class IdentityService {
     ]);
   }
 
-  private async createSession(user: { id: string; email: string; displayName: string; role: 'TRAVELER' | 'ADMIN' }) {
+  private async createSession(
+    user: { id: string; email: string; displayName: string; role: 'TRAVELER' | 'ADMIN' },
+    expectedPasswordHash: string,
+  ) {
     const now = new Date();
     const sessionId = randomUUID();
     const familyId = randomUUID();
     const accessToken = createOpaqueToken();
     const refreshToken = createOpaqueToken();
-    await this.prisma.session.create({
-      data: {
-        id: sessionId, userId: user.id, familyId,
-        credentials: { create: [
-          { tokenHash: hashToken(accessToken), type: 'ACCESS', expiresAt: new Date(now.getTime() + ACCESS_TTL_MS) },
-          { tokenHash: hashToken(refreshToken), type: 'REFRESH', expiresAt: new Date(now.getTime() + REFRESH_TTL_MS) },
-        ] },
-      },
-    });
+    await this.prisma.$transaction(async (tx) => {
+      // A login verified before a concurrent password change must not create a fresh session afterward.
+      await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${user.id}::uuid FOR UPDATE`;
+      const current = await tx.user.findFirst({
+        where: { id: user.id, status: 'ACTIVE', passwordHash: expectedPasswordHash },
+        select: { id: true },
+      });
+      if (!current) {
+        throw new UnauthorizedException({ code: 'INVALID_CREDENTIALS', message: 'Email or password is incorrect.' });
+      }
+      await tx.session.create({
+        data: {
+          id: sessionId, userId: user.id, familyId,
+          credentials: { create: [
+            { tokenHash: hashToken(accessToken), type: 'ACCESS', expiresAt: new Date(now.getTime() + ACCESS_TTL_MS) },
+            { tokenHash: hashToken(refreshToken), type: 'REFRESH', expiresAt: new Date(now.getTime() + REFRESH_TTL_MS) },
+          ] },
+        },
+      });
+    }, { isolationLevel: 'Serializable' });
     return {
       user, accessToken, refreshToken, tokenType: 'Bearer',
       expiresIn: Math.floor(ACCESS_TTL_MS / 1000),
