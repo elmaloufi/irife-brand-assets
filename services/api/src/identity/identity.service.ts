@@ -302,7 +302,6 @@ export class IdentityService {
       throw new UnauthorizedException({ code: 'CURRENT_PASSWORD_INVALID', message: 'The current password is incorrect.' });
     }
     const passwordHash = await hashPassword(newPassword);
-    const now = new Date();
     await this.prisma.$transaction(async (tx) => {
       // Serialize password changes, reset flows, and session creation for this account.
       await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${userId}::uuid FOR UPDATE`;
@@ -313,7 +312,12 @@ export class IdentityService {
       if (!current || current.status !== 'ACTIVE' || current.passwordHash !== user.passwordHash) {
         throw new UnauthorizedException({ code: 'CURRENT_PASSWORD_INVALID', message: 'The current password is incorrect.' });
       }
+      const now = new Date();
       await tx.user.update({ where: { id: userId }, data: { passwordHash } });
+      await tx.identityActionToken.updateMany({
+        where: { userId, type: 'PASSWORD_RESET', consumedAt: null },
+        data: { consumedAt: now },
+      });
       const sessions = await tx.session.findMany({
         where: { userId, revokedAt: null },
         select: { id: true },
