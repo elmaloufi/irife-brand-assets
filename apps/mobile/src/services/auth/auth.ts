@@ -4,9 +4,9 @@ import { isUnauthorizedApiError } from './session-error.mjs';
 
 const SESSION_KEY = 'irife.auth.session.v1';
 export interface AuthUser { id: string; email: string; displayName: string; role: 'TRAVELER' | 'ADMIN'; }
-export interface AuthSession { accessToken: string; refreshToken: string; tokenType: 'Bearer'; expiresIn: number; user: AuthUser; }
+export interface AuthSession { accessToken: string; refreshToken: string; tokenType: 'Bearer'; expiresIn: number; user: AuthUser; refreshRequestId?: string; }
 export interface AccountSession { id: string; createdAt: string; lastUsedAt: string | null; isCurrent: boolean; }
-interface TokenResponse { accessToken: string; refreshToken: string; tokenType: 'Bearer'; expiresIn: number; }
+interface TokenResponse { accessToken: string; refreshToken: string; tokenType: 'Bearer'; expiresIn: number; }\nfunction createRefreshRequestId(): string {\n  // This identifier is for retry correlation, not authentication. The refresh token remains the bearer credential.\n  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;\n}
 let refreshInFlight: Promise<AuthSession | null> | null = null;
 
 async function saveSession(session: AuthSession): Promise<void> {
@@ -20,7 +20,7 @@ export async function readStoredSession(): Promise<AuthSession | null> {
     if (typeof parsed.accessToken !== 'string' || typeof parsed.refreshToken !== 'string' || !parsed.user || typeof parsed.user.id !== 'string' || typeof parsed.user.email !== 'string' || typeof parsed.user.displayName !== 'string') {
       await clearStoredSession(); return null;
     }
-    return parsed as AuthSession;
+    if (parsed.refreshRequestId !== undefined && typeof parsed.refreshRequestId !== 'string') {\n      await clearStoredSession(); return null;\n    }\n    return parsed as AuthSession;
   } catch { await clearStoredSession(); return null; }
 }
 export async function clearStoredSession(): Promise<void> { await SecureStore.deleteItemAsync(SESSION_KEY); }
