@@ -35,5 +35,5 @@ The request identifier is optional at the API boundary so older mobile clients c
 
 - The refresh response is encrypted at rest in the `SessionCredential` row; raw refresh tokens are never stored.
 - The request identifier is a correlation value, not an authentication factor. Possession of the refresh token remains required.
-- The retry response is retained for at most 10 minutes. After that, a fresh sign-in may be required if the original response was lost.
+- The stored response is eligible for idempotent replay for 10 minutes. The encrypted value remains on the consumed credential row until that row is removed by credential/session cleanup; this change does not introduce a scheduled cleanup job. After the retry window, a fresh sign-in may be required if the original response was lost.
 - Monitor production deployment configuration before enabling this API change: the encryption key must be present before the service starts.
