@@ -23,19 +23,23 @@ export class PasswordRecoveryService {
 
     const now = new Date();
     const token = createOpaqueToken();
-    await this.prisma.identityActionToken.updateMany({
-      where: { userId: user.id, type: 'PASSWORD_RESET', consumedAt: null },
-      data: { consumedAt: now },
-    });
-    const action = await this.prisma.identityActionToken.create({
-      data: {
-        userId: user.id,
-        tokenHash: hashToken(token),
-        type: 'PASSWORD_RESET',
-        expiresAt: new Date(now.getTime() + RESET_TTL_MS),
-      },
-      select: { id: true },
-    });
+    const action = await this.prisma.$transaction(async (tx) => {
+      // Serialize reset-token issuance per account so concurrent requests cannot leave multiple live tokens.
+      await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${user.id}::uuid FOR UPDATE`;
+      await tx.identityActionToken.updateMany({
+        where: { userId: user.id, type: 'PASSWORD_RESET', consumedAt: null },
+        data: { consumedAt: now },
+      });
+      return tx.identityActionToken.create({
+        data: {
+          userId: user.id,
+          tokenHash: hashToken(token),
+          type: 'PASSWORD_RESET',
+          expiresAt: new Date(now.getTime() + RESET_TTL_MS),
+        },
+        select: { id: true },
+      });
+    }, { isolationLevel: 'Serializable' });
 
     try {
       await this.email.deliverOneTimeRecoveryCode(user.email, token);
@@ -63,6 +67,9 @@ export class PasswordRecoveryService {
 
     const passwordHash = await hashPassword(newPassword);
     await this.prisma.$transaction(async (tx) => {
+      // Lock the account row before consuming the token. This serializes competing reset tokens,
+      // password changes, and session creation for the same user.
+      await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${action.user.id}::uuid FOR UPDATE`;
       const consumed = await tx.identityActionToken.updateMany({
         where: { id: action.id, consumedAt: null, expiresAt: { gt: now } },
         data: { consumedAt: now },
@@ -80,7 +87,7 @@ export class PasswordRecoveryService {
         await tx.session.updateMany({ where: { id: { in: sessionIds }, revokedAt: null }, data: { revokedAt: now } });
         await tx.sessionCredential.updateMany({ where: { sessionId: { in: sessionIds }, revokedAt: null }, data: { revokedAt: now } });
       }
-    });
+    }, { isolationLevel: 'Serializable' });
     return { reset: true };
   }
 }
