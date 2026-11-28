@@ -1,6 +1,6 @@
 # IRIFE Mobile
 
-Native Android/iOS application built with React Native, Expo SDK modules, Expo Router, and TypeScript. The app is developed and run as its own native application; the shared Expo Go runtime is not part of the development or release workflow.
+Native Android/iOS application built with React Native, Expo SDK modules, Expo Router, and TypeScript. The app is developed and run as its own native application; development, QA, and release all use an IRIFE-built native binary.
 
 ## Current status
 
