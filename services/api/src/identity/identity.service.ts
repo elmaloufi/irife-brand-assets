@@ -154,7 +154,6 @@ export class IdentityService {
       throw new UnauthorizedException({ code: 'INVALID_REFRESH_TOKEN', message: 'The refresh token is invalid or expired.' });
     }
 
-    const now = new Date();
     const result = await this.prisma.$transaction(async (tx) => {
       // Serialize all uses of one refresh credential. A retry with the same
       // request id receives the original encrypted response; a different id
@@ -164,6 +163,7 @@ export class IdentityService {
         where: { id: existing.id },
         include: { session: { include: { user: true } } },
       });
+      const now = new Date();
       if (
         !credential ||
         credential.type !== 'REFRESH' ||
@@ -344,7 +344,6 @@ export class IdentityService {
     user: { id: string; email: string; displayName: string; role: 'TRAVELER' | 'ADMIN' },
     expectedPasswordHash: string,
   ) {
-    const now = new Date();
     const sessionId = randomUUID();
     const familyId = randomUUID();
     const accessToken = createOpaqueToken();
@@ -359,6 +358,7 @@ export class IdentityService {
       if (!current) {
         throw new UnauthorizedException({ code: 'INVALID_CREDENTIALS', message: 'Email or password is incorrect.' });
       }
+      const now = new Date();
       await tx.session.create({
         data: {
           id: sessionId, userId: user.id, familyId,
