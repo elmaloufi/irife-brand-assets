@@ -18,6 +18,7 @@ describe('identity session management', () => {
         updateMany: jest.fn().mockResolvedValue({ count: 2 }),
       },
       sessionCredential: { updateMany: jest.fn().mockResolvedValue({ count: 4 }) },
+      identityActionToken: { updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
     };
     const prisma = {
       user: { findUnique: jest.fn().mockResolvedValue({ passwordHash, status: 'ACTIVE' }) },
@@ -29,6 +30,10 @@ describe('identity session management', () => {
       .resolves.toBeUndefined();
     expect(tx.$queryRaw).toHaveBeenCalledTimes(1);
     expect(tx.user.update).toHaveBeenCalledTimes(1);
+    expect(tx.identityActionToken.updateMany).toHaveBeenCalledWith({
+      where: { userId: 'user-1', type: 'PASSWORD_RESET', consumedAt: null },
+      data: { consumedAt: expect.any(Date) },
+    });
     expect(tx.session.findMany).toHaveBeenCalledWith({
       where: { userId: 'user-1', revokedAt: null },
       select: { id: true },
