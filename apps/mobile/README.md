@@ -34,7 +34,7 @@ To run the JavaScript development server against the installed native applicatio
 npm run start --workspace=@irife/mobile
 ```
 
-The start command explicitly targets a native development build. It does not launch the shared Expo Go application. A native application binary must already be installed on the device.
+The start command explicitly targets a native development build. It will not launch a generic shared preview application. A native application binary must already be installed on the device.
 
 For iOS, run `npm run ios --workspace=@irife/mobile` from macOS with Xcode installed.
 
