@@ -6,7 +6,7 @@ IRIFE refresh tokens are single-use credentials. Each successful refresh consume
 
 The current mobile client creates a request identifier before refreshing and persists it with the session in Expo SecureStore before sending the request. If the response is lost after the server commits the rotation, the next attempt sends the same refresh token and request identifier.
 
-The API locks the presented credential row with PostgreSQL `SELECT ... FOR UPDATE`. On the first request it atomically:
+The API locks the presented credential row with PostgreSQL `SELECT ... FOR UPDATE`. AES-GCM additional authenticated data binds the encrypted response to that credential ID and request ID. On the first request it atomically:
 - marks the old refresh credential consumed;
 - stores the request identifier;
 - stores the refresh response encrypted with AES-256-GCM and a fresh random IV;
