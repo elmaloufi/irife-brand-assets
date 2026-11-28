@@ -115,6 +115,9 @@ model SessionCredential {
   expiresAt  DateTime       @db.Timestamptz(3)
   consumedAt DateTime?      @db.Timestamptz(3)
   revokedAt  DateTime?      @db.Timestamptz(3)
+  rotationRequestId String? @db.VarChar(128)
+  rotationResponseCiphertext String? @db.Text
+  rotationResponseExpiresAt DateTime? @db.Timestamptz(3)
   createdAt  DateTime       @default(now()) @db.Timestamptz(3)
   session    Session        @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 

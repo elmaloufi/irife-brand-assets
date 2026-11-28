@@ -50,7 +50,7 @@ export class IdentityController {
   @UseGuards(IdentityRateLimitGuard)
   @HttpCode(200)
   refresh(@Body() body: RefreshDto) {
-    return this.identity.refresh(body.refreshToken);
+    return this.identity.refresh(body.refreshToken, body.requestId);
   }
 
   @Get('me')

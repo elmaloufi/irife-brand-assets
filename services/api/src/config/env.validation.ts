@@ -5,6 +5,7 @@ export interface ValidatedEnvironment {
   PORT: number;
   DATABASE_URL: string;
   CORS_ORIGINS: string[];
+  REFRESH_TOKEN_ENCRYPTION_KEY?: string;
 }
 
 const NODE_ENVIRONMENTS: readonly NodeEnvironment[] = [
@@ -89,10 +90,26 @@ export function validateEnvironment(
     throw new Error('DATABASE_URL must be a valid PostgreSQL connection URL');
   }
 
+  const rotationKey = raw.REFRESH_TOKEN_ENCRYPTION_KEY;
+  if (rotationKey !== undefined && rotationKey !== '') {
+    if (typeof rotationKey !== 'string') {
+      throw new Error('REFRESH_TOKEN_ENCRYPTION_KEY must be a base64-encoded 32-byte key');
+    }
+    const decoded = Buffer.from(rotationKey, 'base64');
+    if (decoded.length !== 32 || decoded.toString('base64') !== rotationKey) {
+      throw new Error('REFRESH_TOKEN_ENCRYPTION_KEY must be a base64-encoded 32-byte key');
+    }
+  } else if (nodeEnv === 'production') {
+    throw new Error('REFRESH_TOKEN_ENCRYPTION_KEY is required in production');
+  }
+
   return {
     NODE_ENV: nodeEnv as NodeEnvironment,
     PORT: parsePort(raw.PORT),
     DATABASE_URL: databaseUrl,
     CORS_ORIGINS: parseCorsOrigins(raw.CORS_ORIGINS),
+    ...(typeof rotationKey === 'string' && rotationKey.length > 0
+      ? { REFRESH_TOKEN_ENCRYPTION_KEY: rotationKey }
+      : {}),
   };
 }

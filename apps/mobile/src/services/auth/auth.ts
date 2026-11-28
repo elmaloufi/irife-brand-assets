@@ -4,9 +4,13 @@ import { isUnauthorizedApiError } from './session-error.mjs';
 
 const SESSION_KEY = 'irife.auth.session.v1';
 export interface AuthUser { id: string; email: string; displayName: string; role: 'TRAVELER' | 'ADMIN'; }
-export interface AuthSession { accessToken: string; refreshToken: string; tokenType: 'Bearer'; expiresIn: number; user: AuthUser; }
+export interface AuthSession { accessToken: string; refreshToken: string; tokenType: 'Bearer'; expiresIn: number; user: AuthUser; refreshRequestId?: string; }
 export interface AccountSession { id: string; createdAt: string; lastUsedAt: string | null; isCurrent: boolean; }
 interface TokenResponse { accessToken: string; refreshToken: string; tokenType: 'Bearer'; expiresIn: number; }
+function createRefreshRequestId(): string {
+  // This identifier is for retry correlation, not authentication. The refresh token remains the bearer credential.
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+}
 let refreshInFlight: Promise<AuthSession | null> | null = null;
 
 async function saveSession(session: AuthSession): Promise<void> {
@@ -18,6 +22,9 @@ export async function readStoredSession(): Promise<AuthSession | null> {
   try {
     const parsed = JSON.parse(raw) as Partial<AuthSession>;
     if (typeof parsed.accessToken !== 'string' || typeof parsed.refreshToken !== 'string' || !parsed.user || typeof parsed.user.id !== 'string' || typeof parsed.user.email !== 'string' || typeof parsed.user.displayName !== 'string') {
+      await clearStoredSession(); return null;
+    }
+    if (parsed.refreshRequestId !== undefined && typeof parsed.refreshRequestId !== 'string') {
       await clearStoredSession(); return null;
     }
     return parsed as AuthSession;
@@ -37,21 +44,30 @@ export function signUp(displayName: string, email: string, password: string): Pr
 export async function refreshSession(current: AuthSession): Promise<AuthSession | null> {
   if (refreshInFlight) return refreshInFlight;
 
-  // A different request may have rotated this token after this caller read its
-  // session. Never replay an older refresh token: the server treats replay as
-  // token theft and revokes the entire session family.
-  const latest = await readStoredSession();
+  // Read the latest secure-store state before deciding whether this caller is stale.
+  let latest = await readStoredSession();
   if (!latest) return null;
   if (latest.refreshToken !== current.refreshToken) return latest;
   if (refreshInFlight) return refreshInFlight;
 
   refreshInFlight = (async () => {
     try {
+      // Persist the id before sending the request. If the server rotates the
+      // token but the response is lost, the next attempt reuses this exact id.
+      if (!latest.refreshRequestId) {
+        latest = { ...latest, refreshRequestId: createRefreshRequestId() };
+        await saveSession(latest);
+      }
+
       const tokens = await apiRequest<TokenResponse>('/api/v1/identity/refresh', {
         method: 'POST',
-        body: JSON.stringify({ refreshToken: latest.refreshToken }),
+        body: JSON.stringify({
+          refreshToken: latest.refreshToken,
+          requestId: latest.refreshRequestId,
+        }),
       });
-      const rotated = { ...latest, ...tokens };
+      const { refreshRequestId: _completedRequestId, ...sessionWithoutPendingRequest } = latest;
+      const rotated = { ...sessionWithoutPendingRequest, ...tokens };
       await saveSession(rotated);
       return rotated;
     } catch (error) {
@@ -60,7 +76,7 @@ export async function refreshSession(current: AuthSession): Promise<AuthSession 
       const currentStored = await readStoredSession();
       if (currentStored && currentStored.refreshToken !== latest.refreshToken) return currentStored;
       // A timeout, offline device, or 5xx response does not prove that the
-      // refresh token is invalid. Keep it so the next request can retry.
+      // refresh token is invalid. Keep the token and request id for a safe retry.
       if (!isUnauthorizedApiError(error)) throw error;
       await clearStoredSession();
       return null;

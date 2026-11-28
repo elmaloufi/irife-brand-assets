@@ -31,10 +31,13 @@ export class IdentityRateLimitGuard implements CanActivate {
     const http = context.switchToHttp();
     const request = http.getRequest<Request>();
     const response = http.getResponse<Response>();
-    const originalPath = request.originalUrl.split('?')[0] ?? request.path;
-    const route = originalPath.startsWith('/api/v1/')
+    const originalPath = (request.originalUrl.split('?')[0] ?? request.path).toLowerCase();
+    const pathWithoutPrefix = originalPath.startsWith('/api/v1/')
       ? originalPath.slice('/api/v1'.length)
       : originalPath;
+    // Express route matching is case-insensitive and accepts trailing slashes
+    // by default. Normalize both so those variants cannot bypass auth limits.
+    const route = pathWithoutPrefix.replace(/\/+$/, '') || '/';
     const policy = POLICIES[route];
     if (!policy) return true;
 

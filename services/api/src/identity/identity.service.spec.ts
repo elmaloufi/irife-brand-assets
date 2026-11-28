@@ -1,8 +1,71 @@
 import { describe, expect, it, jest } from '@jest/globals';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { hashPassword } from './password-hasher.js';
 import { IdentityService } from './identity.service.js';
 
 describe('identity session management', () => {
+
+  it('serializes password changes with session creation and revokes all active credentials', async () => {
+    const passwordHash = await hashPassword('the-current-long-password');
+    const tx = {
+      $queryRaw: jest.fn().mockResolvedValue([]),
+      user: {
+        findUnique: jest.fn().mockResolvedValue({ passwordHash, status: 'ACTIVE' }),
+        update: jest.fn().mockResolvedValue({}),
+      },
+      session: {
+        findMany: jest.fn().mockResolvedValue([{ id: 'session-1' }, { id: 'session-2' }]),
+        updateMany: jest.fn().mockResolvedValue({ count: 2 }),
+      },
+      sessionCredential: { updateMany: jest.fn().mockResolvedValue({ count: 4 }) },
+      identityActionToken: { updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
+    };
+    const prisma = {
+      user: { findUnique: jest.fn().mockResolvedValue({ passwordHash, status: 'ACTIVE' }) },
+      $transaction: jest.fn(async (callback: (client: typeof tx) => Promise<unknown>) => callback(tx)),
+    };
+    const service = new IdentityService(prisma as never);
+
+    await expect(service.changePassword('user-1', 'the-current-long-password', 'the-new-long-password'))
+      .resolves.toBeUndefined();
+    expect(tx.$queryRaw).toHaveBeenCalledTimes(1);
+    expect(tx.user.update).toHaveBeenCalledTimes(1);
+    expect(tx.identityActionToken.updateMany).toHaveBeenCalledWith({
+      where: { userId: 'user-1', type: 'PASSWORD_RESET', consumedAt: null },
+      data: { consumedAt: expect.any(Date) },
+    });
+    expect(tx.session.findMany).toHaveBeenCalledWith({
+      where: { userId: 'user-1', revokedAt: null },
+      select: { id: true },
+    });
+    expect(tx.session.updateMany).toHaveBeenCalledTimes(1);
+    expect(tx.sessionCredential.updateMany).toHaveBeenCalledTimes(1);
+  });
+
+  it('aborts a password change if another password update won the account lock first', async () => {
+    const oldHash = await hashPassword('the-current-long-password');
+    const newerHash = await hashPassword('a-different-new-password');
+    const tx = {
+      $queryRaw: jest.fn().mockResolvedValue([]),
+      user: {
+        findUnique: jest.fn().mockResolvedValue({ passwordHash: newerHash, status: 'ACTIVE' }),
+        update: jest.fn(),
+      },
+      session: { findMany: jest.fn(), updateMany: jest.fn() },
+      sessionCredential: { updateMany: jest.fn() },
+    };
+    const prisma = {
+      user: { findUnique: jest.fn().mockResolvedValue({ passwordHash: oldHash, status: 'ACTIVE' }) },
+      $transaction: jest.fn(async (callback: (client: typeof tx) => Promise<unknown>) => callback(tx)),
+    };
+    const service = new IdentityService(prisma as never);
+
+    await expect(service.changePassword('user-1', 'the-current-long-password', 'the-new-long-password'))
+      .rejects.toBeInstanceOf(UnauthorizedException);
+    expect(tx.user.update).not.toHaveBeenCalled();
+    expect(tx.session.updateMany).not.toHaveBeenCalled();
+  });
+
   it('returns only active sessions for the authenticated account and marks the current session', async () => {
     const rows = [
       { id: 'session-current', createdAt: new Date('2026-11-21T10:00:00Z'), lastUsedAt: null },

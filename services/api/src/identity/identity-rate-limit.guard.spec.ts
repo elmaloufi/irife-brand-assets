@@ -46,6 +46,19 @@ describe('IdentityRateLimitGuard', () => {
     expect(response.setHeader).toHaveBeenCalledWith('Retry-After', expect.any(String));
   });
 
+  it('does not allow case or trailing-slash variants to bypass authentication limits', async () => {
+    const prisma = {
+      $queryRaw: jest.fn().mockResolvedValue([{ requestCount: 6, windowStartedAt: new Date() }]),
+      authRateLimitBucket: { deleteMany: jest.fn().mockResolvedValue({ count: 0 }) },
+    };
+    const guard = new IdentityRateLimitGuard(prisma as never);
+    const { context, response } = createContext('/API/V1/IDENTITY/LOGIN/');
+
+    await expect(guard.canActivate(context)).rejects.toBeInstanceOf(HttpException);
+    expect(prisma.$queryRaw).toHaveBeenCalledTimes(1);
+    expect(response.setHeader).toHaveBeenCalledWith('Retry-After', expect.any(String));
+  });
+
   it('does not rate-limit routes outside the authentication policy', async () => {
     const prisma = { $queryRaw: jest.fn() };
     const guard = new IdentityRateLimitGuard(prisma as never);

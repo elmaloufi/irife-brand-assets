@@ -20,6 +20,21 @@ describe('validateEnvironment', () => {
     expect(() => validateEnvironment({})).toThrow('DATABASE_URL is required');
   });
 
+  it('requires a valid refresh response encryption key in production', () => {
+    expect(() => validateEnvironment({ ...validEnvironment, NODE_ENV: 'production' }))
+      .toThrow('REFRESH_TOKEN_ENCRYPTION_KEY is required in production');
+    expect(() => validateEnvironment({
+      ...validEnvironment,
+      NODE_ENV: 'production',
+      REFRESH_TOKEN_ENCRYPTION_KEY: 'not-a-valid-key',
+    })).toThrow('REFRESH_TOKEN_ENCRYPTION_KEY must be a base64-encoded 32-byte key');
+    expect(validateEnvironment({
+      ...validEnvironment,
+      NODE_ENV: 'production',
+      REFRESH_TOKEN_ENCRYPTION_KEY: Buffer.alloc(32, 9).toString('base64'),
+    }).REFRESH_TOKEN_ENCRYPTION_KEY).toBe(Buffer.alloc(32, 9).toString('base64'));
+  });
+
   it('rejects invalid ports', () => {
     expect(() => validateEnvironment({ ...validEnvironment, PORT: '70000' }))
       .toThrow('PORT must be an integer between 1 and 65535');
