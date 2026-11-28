@@ -193,7 +193,7 @@ export class IdentityService {
           data: { revokedAt: now },
         });
       }
-    }, { isolationLevel: 'Serializable' });
+    });
   }
 
   async logout(sessionId: string): Promise<void> {
@@ -232,7 +232,7 @@ export class IdentityService {
           ] },
         },
       });
-    }, { isolationLevel: 'Serializable' });
+    });
     return {
       user, accessToken, refreshToken, tokenType: 'Bearer',
       expiresIn: Math.floor(ACCESS_TTL_MS / 1000),
