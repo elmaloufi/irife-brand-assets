@@ -15,7 +15,7 @@ IRIFE is a production-oriented mobile application. Development and verification 
 - Start Metro with the explicit development-build target: `expo start --dev-client`.
 - Build and install Android with `expo run:android`; build and install iOS with `expo run:ios` on macOS.
 - Generate native project files with `expo prebuild` when needed. Do not run clean prebuilds over unreviewed native changes.
-- Do not use the shared Expo Go runtime as a development, QA, or release target.
+- Do not use a generic shared preview container as a development, QA, or release target.
 - Keep SDK-compatible dependency versions aligned with the selected Expo SDK and verify them with the project's compatibility checks.
 
 ## Consequences
