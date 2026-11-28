@@ -1,0 +1,44 @@
+name: Feature request
+description: Propose a user or engineering improvement.
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: "Check existing issues and product documentation before submitting. A proposal is not an implementation commitment."
+  - type: dropdown
+    id: area
+    attributes:
+      label: Product area
+      options:
+        - Mobile app
+        - Backend API
+        - ITRI / AI
+        - Security / reliability
+        - Design / accessibility
+        - Documentation / localization
+        - Developer experience
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: Who experiences the problem, and in what situation?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the behavior or outcome you want. Avoid prescribing implementation unless necessary.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives and trade-offs
+      description: Other approaches, constraints, risks, or accessibility/localization considerations.
+    validations:
+      required: false
