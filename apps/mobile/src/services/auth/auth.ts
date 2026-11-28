@@ -3,7 +3,7 @@ import { ApiClientError, apiRequest } from '../api/client';
 import { isUnauthorizedApiError } from './session-error.mjs';
 
 const SESSION_KEY = 'irife.auth.session.v1';
-export interface AuthUser { id: string; email: string; displayName: string; role: 'TRAVELER' | 'ADMIN'; }
+export interface AuthUser { id: string; email: string; emailVerifiedAt?: string | null; displayName: string; role: 'TRAVELER' | 'ADMIN'; }
 export interface AuthSession { accessToken: string; refreshToken: string; tokenType: 'Bearer'; expiresIn: number; user: AuthUser; }
 export interface AccountSession { id: string; createdAt: string; lastUsedAt: string | null; isCurrent: boolean; }
 interface TokenResponse { accessToken: string; refreshToken: string; tokenType: 'Bearer'; expiresIn: number; }
@@ -81,6 +81,26 @@ export async function completePasswordReset(token: string, newPassword: string):
   await apiRequest<{ reset: true }>('/api/v1/identity/password/reset', {
     method: 'POST', body: JSON.stringify({ token, newPassword }),
   });
+}
+
+export async function requestEmailVerification(): Promise<void> {
+  await authenticatedApiRequest<{ accepted: true }>('/api/v1/identity/email/verification/request', { method: 'POST' });
+}
+
+export async function confirmEmailVerification(token: string): Promise<{ verified: true; emailVerifiedAt: string }> {
+  return apiRequest<{ verified: true; emailVerifiedAt: string }>('/api/v1/identity/email/verification/confirm', {
+    method: 'POST', body: JSON.stringify({ token }),
+  });
+}
+
+export async function refreshCurrentUser(): Promise<AuthSession> {
+  const current = await readStoredSession();
+  if (!current) throw new ApiClientError('Sign in to continue.', 401, 'AUTHENTICATION_REQUIRED');
+  const user = await authenticatedApiRequest<AuthUser>('/api/v1/identity/me');
+  const latest = await readStoredSession();
+  const next = { ...(latest ?? current), user };
+  await saveSession(next);
+  return next;
 }
 
 export async function getCurrentUser(session: AuthSession): Promise<AuthUser> {

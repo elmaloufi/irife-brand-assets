@@ -13,6 +13,7 @@ import {
   signIn as requestSignIn,
   signOut as requestSignOut,
   updateAccountProfile as requestUpdateAccountProfile,
+  refreshCurrentUser as requestRefreshCurrentUser,
   signUp as requestSignUp,
   type AuthSession,
   type AuthUser,
@@ -29,6 +30,7 @@ interface AuthContextValue {
   signUp(displayName: string, email: string, password: string): Promise<void>;
   signOut(): Promise<void>;
   updateProfile(displayName: string): Promise<void>;
+  refreshUser(): Promise<void>;
   clearError(): void;
 }
 
@@ -119,6 +121,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
     }
   }, [session]);
 
+  const refreshUser = useCallback(async () => {
+    const next = await requestRefreshCurrentUser();
+    setSession(next);
+  }, []);
+
   const value = useMemo<AuthContextValue>(() => ({
     user: session?.user ?? null,
     session,
@@ -129,8 +136,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
     signUp,
     signOut,
     updateProfile,
+    refreshUser,
     clearError: () => setError(null),
-  }), [session, isLoading, isSubmitting, error, signIn, signUp, signOut, updateProfile]);
+  }), [session, isLoading, isSubmitting, error, signIn, signUp, signOut, updateProfile, refreshUser]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

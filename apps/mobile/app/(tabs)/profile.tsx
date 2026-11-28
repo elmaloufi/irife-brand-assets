@@ -65,6 +65,17 @@ export default function ProfileScreen() {
         {user ? <Pressable accessibilityRole="button" onPress={() => { setEditingName((value) => !value); setProfileError(null); }} style={styles.editButton}><Ionicons name={editingName ? 'close' : 'pencil'} size={15} color={theme.colors.primaryDark} /><Text style={styles.editButtonText}>{editingName ? 'Cancel' : 'Edit'}</Text></Pressable> : <View style={styles.previewBadge}><Text style={styles.previewBadgeText}>GUEST</Text></View>}
       </View>
 
+      {user && !user.emailVerifiedAt ? (
+        <Pressable accessibilityRole="button" onPress={() => router.push('/auth/verify-email')} style={styles.verificationCard}>
+          <View style={styles.verificationIcon}><Ionicons name="mail-unread-outline" size={19} color={theme.colors.primary} /></View>
+          <View style={styles.rowCopy}>
+            <Text style={styles.rowTitle}>Verify your email</Text>
+            <Text style={styles.rowDescription}>Confirm your address to help protect your account.</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={theme.colors.secondary} />
+        </Pressable>
+      ) : null}
+
       {editingName && user ? <View style={styles.editPanel}><Text style={styles.editHint}>Update the name shown on your traveler profile. Email changes require verification and are not enabled yet.</Text>{profileError ? <Text accessibilityRole="alert" style={styles.profileError}>{profileError}</Text> : null}<Pressable accessibilityRole="button" disabled={isSubmitting} onPress={() => void saveName()} style={[styles.saveButton,isSubmitting&&styles.disabled]}><Text style={styles.saveButtonText}>{isSubmitting?'Saving…':'Save profile name'}</Text></Pressable></View> : null}
       {profileSaved ? <Text style={styles.profileSuccess}>Profile updated successfully.</Text> : null}
 
@@ -117,6 +128,8 @@ const styles = StyleSheet.create({
   title: { color: theme.colors.ink, fontSize: 30, lineHeight: 36, fontWeight: '900' },
   subtitle: { color: theme.colors.secondary, fontSize: 14, lineHeight: 21 },
   profileCard: { flexDirection: 'row', alignItems: 'center', gap: 13, padding: 17, borderRadius: theme.radius.card, backgroundColor: theme.colors.softMint },
+  verificationCard: { flexDirection: 'row', alignItems: 'center', gap: 11, padding: 13, borderRadius: 16, borderWidth: 1, borderColor: theme.colors.gold, backgroundColor: theme.colors.surface },
+  verificationIcon: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 13, backgroundColor: theme.colors.softMint },
   avatar: { width: 54, height: 54, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.colors.white },
   profileCopy: { flex: 1, gap: 4 },
   profileTitle: { color: theme.colors.primaryDark, fontSize: 15, fontWeight: '900' },

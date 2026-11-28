@@ -37,6 +37,7 @@ function AppNavigation() {
           <Stack.Screen name="saved" />
           <Stack.Screen name="settings" />
           <Stack.Screen name="settings/security" />
+          <Stack.Screen name="auth/verify-email" options={{ presentation: "card" }} />
         </Stack.Protected>
 
         <Stack.Protected guard={guards.public}>

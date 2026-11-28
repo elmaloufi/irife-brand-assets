@@ -11,13 +11,19 @@ import { RefreshDto } from './dto/refresh.dto.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { RequestPasswordResetDto } from './dto/request-password-reset.dto.js';
 import { CompletePasswordResetDto } from './dto/complete-password-reset.dto.js';
+import { ConfirmEmailVerificationDto } from './dto/confirm-email-verification.dto.js';
 import { PasswordRecoveryService } from './password-recovery.service.js';
+import { EmailVerificationService } from './email-verification.service.js';
 import type { AuthenticatedUser } from './identity.types.js';
 
 @ApiTags('identity')
 @Controller('identity')
 export class IdentityController {
-  constructor(private readonly identity: IdentityService, private readonly passwordRecovery: PasswordRecoveryService) {}
+  constructor(
+    private readonly identity: IdentityService,
+    private readonly passwordRecovery: PasswordRecoveryService,
+    private readonly emailVerification: EmailVerificationService,
+  ) {}
 
   @Post('register')
   @UseGuards(IdentityRateLimitGuard)
@@ -44,6 +50,21 @@ export class IdentityController {
   @HttpCode(200)
   completePasswordReset(@Body() body: CompletePasswordResetDto) {
     return this.passwordRecovery.completeReset(body.token, body.newPassword);
+  }
+
+  @Post('email/verification/request')
+  @ApiBearerAuth()
+  @UseGuards(AccessTokenGuard, IdentityRateLimitGuard)
+  @HttpCode(202)
+  requestEmailVerification(@CurrentUser() user: AuthenticatedUser) {
+    return this.emailVerification.requestVerification(user.id);
+  }
+
+  @Post('email/verification/confirm')
+  @UseGuards(IdentityRateLimitGuard)
+  @HttpCode(200)
+  confirmEmailVerification(@Body() body: ConfirmEmailVerificationDto) {
+    return this.emailVerification.confirmVerification(body.token);
   }
 
   @Post('refresh')
