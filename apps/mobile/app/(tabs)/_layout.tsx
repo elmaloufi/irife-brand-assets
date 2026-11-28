@@ -1,6 +1,6 @@
-import { Ionicons } from "@react-native-vector-icons/ionicons";
 import { Tabs } from "expo-router";
-import { StyleSheet, View, useColorScheme } from "react-native";
+import { Pressable, Vibration, useColorScheme } from "react-native";
+import { AnimatedTabIcon } from "../../src/components/AnimatedTabIcon";
 import { usePreferences } from "../../src/services/preferences/PreferencesProvider";
 import { translate } from "../../src/services/preferences/locale.mjs";
 import { tabs } from "../../src/navigation/tabs.mjs";
@@ -11,30 +11,31 @@ export default function TabLayout() {
   const systemScheme = useColorScheme();
   const dark = (preferences.appearance === "system" ? systemScheme : preferences.appearance) === "dark";
   const t = (key: string) => translate(preferences.language, key);
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          height: 78,
+          height: 82,
           marginHorizontal: 13,
           marginBottom: 8,
-          paddingTop: 8,
-          paddingBottom: 8,
+          paddingTop: 7,
+          paddingBottom: 7,
           paddingHorizontal: 5,
-          backgroundColor: dark ? "#182724" : theme.colors.surface,
+          backgroundColor: dark ? "#28251F" : theme.colors.surface,
           borderTopWidth: 0,
           borderWidth: 1,
-          borderColor: dark ? "#2B3D38" : theme.colors.border,
-          borderRadius: 26,
+          borderColor: dark ? "#4A4438" : theme.colors.border,
+          borderRadius: 27,
           elevation: 15,
-          shadowColor: theme.colors.primaryDark,
+          shadowColor: "#302B25",
           shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.12,
+          shadowOpacity: 0.14,
           shadowRadius: 18,
         },
-        tabBarActiveTintColor: dark ? "#D6E8DF" : theme.colors.primaryDark,
-        tabBarInactiveTintColor: "#89948F",
+        tabBarActiveTintColor: dark ? "#F3EBDD" : theme.colors.primaryDark,
+        tabBarInactiveTintColor: dark ? "#B7AC99" : "#71695E",
         tabBarLabelStyle: {
           fontSize: 10,
           fontWeight: "700",
@@ -50,30 +51,64 @@ export default function TabLayout() {
         },
         tabBarHideOnKeyboard: true,
         sceneStyle: {
-          backgroundColor: dark ? "#101B19" : theme.colors.background,
+          backgroundColor: dark ? "#211F19" : theme.colors.background,
         },
       }}
     >
-      {tabs.map((tab) => (
-        <Tabs.Screen
-          key={tab.route}
-          name={tab.route}
-          options={{
-            title: t(tab.route === "index" ? "home" : tab.route === "discover" ? "discover" : tab.route === "map" ? "map" : tab.route === "guide" ? "guide" : "profile"),
-            tabBarLabel: t(tab.route === "index" ? "home" : tab.route === "discover" ? "discover" : tab.route === "map" ? "map" : tab.route === "guide" ? "guide" : "profile"),
-            tabBarIcon: ({ color, focused }) => (
-              <View style={[styles.iconShell, focused && styles.iconShellActive, { backgroundColor: dark ? "#29433B" : theme.colors.softMint }]}>
-                <Ionicons
-                  name={focused ? tab.activeIcon : tab.icon}
-                  size={21}
+      {tabs.map((tab) => {
+        const translationKey =
+          tab.route === "index" ? "home" :
+          tab.route === "discover" ? "discover" :
+          tab.route === "map" ? "map" :
+          tab.route === "guide" ? "guide" : "profile";
+
+        return (
+          <Tabs.Screen
+            key={tab.route}
+            name={tab.route}
+            options={{
+              title: tab.isPortal ? "ITRI" : t(translationKey),
+              tabBarLabel: tab.isPortal ? "ITRI" : t(translationKey),
+              tabBarIcon: ({ color, focused }) => (
+                <AnimatedTabIcon
+                  icon={tab.icon}
+                  activeIcon={tab.activeIcon}
                   color={color}
+                  focused={focused}
+                  isPortal={Boolean(tab.isPortal)}
                 />
-                {focused ? <View style={styles.activeSpark} /> : null}
-              </View>
-            ),
-          }}
-        />
-      ))}
+              ),
+              tabBarButton: ({
+                onPress,
+                onLongPress,
+                onPressIn,
+                style,
+                children,
+                accessibilityRole,
+                accessibilityState,
+                accessibilityLabel,
+                testID,
+              }) => (
+                <Pressable
+                  style={style}
+                  onPress={onPress}
+                  onLongPress={onLongPress}
+                  onPressIn={(event) => {
+                    onPressIn?.(event);
+                    Vibration.vibrate(8);
+                  }}
+                  accessibilityRole={accessibilityRole}
+                  accessibilityState={accessibilityState}
+                  accessibilityLabel={accessibilityLabel}
+                  testID={testID}
+                >
+                  {children}
+                </Pressable>
+              ),
+            }}
+          />
+        );
+      })}
       <Tabs.Screen
         name="requests"
         options={{
@@ -84,24 +119,3 @@ export default function TabLayout() {
     </Tabs>
   );
 }
-
-const styles = StyleSheet.create({
-  iconShell: {
-    width: 46,
-    height: 33,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 15,
-  },
-  iconShellActive: {
-    backgroundColor: theme.colors.softMint,
-  },
-  activeSpark: {
-    position: "absolute",
-    bottom: 2,
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: theme.colors.gold,
-  },
-});

@@ -9,6 +9,11 @@
     "plugins": [
       "expo-router",
       "expo-secure-store"
-    ]
+    ],
+    "android": {
+      "permissions": [
+        "VIBRATE"
+      ]
+    }
   }
 }

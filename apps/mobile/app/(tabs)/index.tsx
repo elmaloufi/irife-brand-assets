@@ -1,11 +1,12 @@
 import { Ionicons } from '@react-native-vector-icons/ionicons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Pressable, StyleSheet, View } from 'react-native';
+import { Image, Pressable, StyleSheet, View } from 'react-native';
 import type { DestinationSummary, ExperienceCard } from '@irife/contracts';
 import { AppButton } from '../../src/components/AppButton';
 import { AppText as Text } from '../../src/components/AppText';
 import { ScreenContainer } from '../../src/components/ScreenContainer';
+import { SkeletonBlock } from '../../src/components/SkeletonBlock';
 import { getDestinations, getExperiences } from '../../src/services/api/discovery';
 import { theme } from '../../src/theme';
 
@@ -80,13 +81,32 @@ export default function HomeScreen() {
           <View style={styles.sectionCopy}><Text style={styles.sectionEyebrow}>START EXPLORING</Text><Text style={styles.sectionTitle}>Discover destinations</Text></View>
           <Pressable accessibilityRole="button" onPress={() => router.push('/(tabs)/discover')} style={styles.seeAll}><Text style={styles.seeAllText}>See all</Text><Ionicons name="arrow-forward" size={15} color={theme.colors.primary} /></Pressable>
         </View>
-        {loading ? <View style={styles.loading}><ActivityIndicator color={theme.colors.primary} /><Text style={styles.helper}>Loading destinations…</Text></View> : destinations.length === 0 ? <View style={styles.notice}><Ionicons name="compass-outline" size={22} color={theme.colors.primary} /><Text style={styles.noticeTitle}>Destinations are being prepared</Text><Text style={styles.noticeText}>Published destinations will appear here as the IRIFE catalogue grows.</Text></View> : (
+        {loading ? <View style={styles.destinationGrid} accessibilityLabel="Loading destinations"><SkeletonBlock width="48%" height={202} radius={22} /><SkeletonBlock width="48%" height={202} radius={22} /></View> : destinations.length === 0 ? <View style={styles.notice}><Ionicons name="compass-outline" size={22} color={theme.colors.primary} /><Text style={styles.noticeTitle}>Destinations are being prepared</Text><Text style={styles.noticeText}>Published destinations will appear here as the IRIFE catalogue grows.</Text></View> : (
           <View style={styles.destinationGrid}>
-            {destinations.slice(0, 4).map((destination) => (
-              <Pressable key={destination.id} accessibilityRole="button" onPress={() => router.push('/(tabs)/discover')} style={({ pressed }) => [styles.destinationCard, pressed && styles.pressed]}>
-                <View style={styles.destinationIcon}><Ionicons name="location-outline" size={20} color={theme.colors.primaryDark} /></View>
-                <Text style={styles.destinationName}>{destination.name}</Text>
-                <Text style={styles.destinationRegion}>{destination.region || 'Morocco'}</Text>
+            {destinations.slice(0, 4).map((destination, index) => (
+              <Pressable
+                key={destination.id}
+                accessibilityRole="button"
+                accessibilityLabel={`Explore ${destination.name}`}
+                onPress={() => router.push('/(tabs)/discover')}
+                style={({ pressed }) => [styles.destinationCard, pressed && styles.pressed]}
+              >
+                <View style={[styles.destinationArtwork, index % 2 === 0 ? styles.destinationArtworkOlive : styles.destinationArtworkClay]}>
+                  <View style={styles.destinationSun} />
+                  <View style={styles.destinationArch}>
+                    <View style={styles.destinationArchInner} />
+                  </View>
+                  <View style={styles.destinationArtDiamond} />
+                </View>
+                <View style={styles.destinationCardCopy}>
+                  <Text style={styles.destinationRegion}>{destination.region || 'MOROCCO'}</Text>
+                  <Text style={styles.destinationName}>{destination.name}</Text>
+                  {destination.summary ? <Text style={styles.destinationSummary} numberOfLines={2}>{destination.summary}</Text> : null}
+                  <View style={styles.destinationCardFooter}>
+                    <Text style={styles.destinationExplore}>EXPLORE</Text>
+                    <Ionicons name="arrow-forward" size={13} color={theme.colors.primary} />
+                  </View>
+                </View>
               </Pressable>
             ))}
           </View>
@@ -98,7 +118,7 @@ export default function HomeScreen() {
           <View style={styles.sectionCopy}><Text style={styles.sectionEyebrow}>FROM LOCAL HOSTS</Text><Text style={styles.sectionTitle}>Experiences to discover</Text></View>
           <Pressable accessibilityRole="button" onPress={() => router.push('/(tabs)/discover')} style={styles.seeAll}><Text style={styles.seeAllText}>See all</Text><Ionicons name="arrow-forward" size={15} color={theme.colors.primary} /></Pressable>
         </View>
-        {loading ? <View style={styles.loading}><ActivityIndicator color={theme.colors.primary} /><Text style={styles.helper}>Loading experiences…</Text></View> : experiences.length === 0 ? <Text style={styles.helper}>New experiences will appear here when local hosts publish them.</Text> : experiences.map((experience) => (
+        {loading ? <View style={styles.loading} accessibilityLabel="Loading experiences"><SkeletonBlock width="100%" height={82} radius={17} /><SkeletonBlock width="100%" height={82} radius={17} /></View> : experiences.length === 0 ? <Text style={styles.helper}>New experiences will appear here when local hosts publish them.</Text> : experiences.map((experience) => (
           <Pressable key={experience.id} accessibilityRole="button" onPress={() => router.push(`/experiences/${experience.id}`)} style={({ pressed }) => [styles.experienceCard, pressed && styles.pressed]}>
             {experience.media[0]?.url ? <Image source={{ uri: experience.media[0].url }} accessibilityLabel={experience.media[0].altText || experience.title} style={styles.experienceImage} /> : <View style={styles.experienceImageFallback}><Ionicons name="compass-outline" size={24} color={theme.colors.gold} /></View>}
             <View style={styles.experienceCopy}>
@@ -140,12 +160,12 @@ const styles = StyleSheet.create({
   searchText: { flex: 1, color: theme.colors.secondary, fontSize: 12 },
   searchAction: { width: 38, height: 38, alignItems: 'center', justifyContent: 'center', borderRadius: 13, backgroundColor: theme.colors.primary },
   hero: { minHeight: 230, justifyContent: 'center', overflow: 'hidden', padding: 20, borderRadius: 25, backgroundColor: theme.colors.hero },
-  heroOrb: { position: 'absolute', width: 190, height: 190, right: -65, top: -80, borderRadius: 95, backgroundColor: '#2D6659', opacity: 0.7 },
+  heroOrb: { position: 'absolute', width: 190, height: 190, right: -65, top: -80, borderRadius: 95, backgroundColor: '#66664A', opacity: 0.7 },
   heroContent: { gap: 10 },
   heroTag: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 7, borderRadius: 99, backgroundColor: theme.colors.heroAccent },
   heroTagText: { color: theme.colors.primaryDark, fontSize: 8, fontWeight: '900', letterSpacing: 0.7 },
   heroTitle: { maxWidth: 270, color: theme.colors.white, fontSize: 25, lineHeight: 31, fontWeight: '900' },
-  heroDescription: { maxWidth: 300, color: '#D8E7E1', fontSize: 11, lineHeight: 17 },
+  heroDescription: { maxWidth: 300, color: '#F3EBDD', fontSize: 11, lineHeight: 17 },
   section: { gap: 13 },
   sectionHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   sectionCopy: { flex: 1, gap: 3 },
@@ -160,11 +180,21 @@ const styles = StyleSheet.create({
   noticeText: { color: theme.colors.secondary, fontSize: 10, lineHeight: 16 },
   retry: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 11, backgroundColor: theme.colors.primaryDark },
   retryText: { color: theme.colors.white, fontSize: 10, fontWeight: '900' },
-  destinationGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 9 },
-  destinationCard: { width: '48%', minHeight: 96, justifyContent: 'center', gap: 5, padding: 13, borderRadius: 17, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
-  destinationIcon: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center', borderRadius: 11, backgroundColor: theme.colors.softMint },
-  destinationName: { color: theme.colors.ink, fontSize: 13, fontWeight: '900' },
-  destinationRegion: { color: theme.colors.secondary, fontSize: 9 },
+  destinationGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  destinationCard: { width: '48%', minHeight: 202, overflow: 'hidden', borderRadius: 22, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, shadowColor: theme.colors.primaryDark, shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.07, shadowRadius: 12, elevation: 2 },
+  destinationArtwork: { height: 94, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+  destinationArtworkOlive: { backgroundColor: theme.colors.olive },
+  destinationArtworkClay: { backgroundColor: theme.colors.terracotta },
+  destinationSun: { position: 'absolute', width: 54, height: 54, top: 12, right: 18, borderRadius: 27, backgroundColor: theme.colors.heroAccent, opacity: 0.9 },
+  destinationArch: { position: 'absolute', bottom: 0, width: 62, height: 76, alignItems: 'center', justifyContent: 'flex-end', borderWidth: 2, borderBottomWidth: 0, borderColor: 'rgba(255,252,246,0.78)', borderTopLeftRadius: 34, borderTopRightRadius: 34 },
+  destinationArchInner: { width: 30, height: 42, borderWidth: 1.5, borderBottomWidth: 0, borderColor: 'rgba(255,252,246,0.72)', borderTopLeftRadius: 17, borderTopRightRadius: 17 },
+  destinationArtDiamond: { position: 'absolute', top: 14, width: 7, height: 7, borderRadius: 1, backgroundColor: theme.colors.white, transform: [{ rotate: '45deg' }] },
+  destinationCardCopy: { flex: 1, gap: 5, padding: 13 },
+  destinationName: { color: theme.colors.ink, fontSize: 14, fontWeight: '900' },
+  destinationRegion: { color: theme.colors.primary, fontSize: 8, fontWeight: '900', letterSpacing: 1 },
+  destinationSummary: { color: theme.colors.secondary, fontSize: 9, lineHeight: 14 },
+  destinationCardFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto', paddingTop: 4 },
+  destinationExplore: { color: theme.colors.primary, fontSize: 8, fontWeight: '900', letterSpacing: 1.1 },
   experienceCard: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 11, borderRadius: 17, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
   experienceImage: { width: 72, height: 76, borderRadius: 12, backgroundColor: theme.colors.softMint },
   experienceImageFallback: { width: 72, height: 76, alignItems: 'center', justifyContent: 'center', borderRadius: 12, backgroundColor: theme.colors.primaryDark },

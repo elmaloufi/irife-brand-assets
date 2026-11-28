@@ -27,7 +27,7 @@ function AppNavigation() {
   return (
     <>
       <StatusBar style={dark ? 'light' : 'dark'} />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: dark ? '#101B19' : theme.colors.background } }}>
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: dark ? '#211F19' : theme.colors.background } }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="+not-found" />
 

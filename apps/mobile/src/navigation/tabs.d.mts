@@ -7,6 +7,7 @@ export type PrimaryTab = {
   label: string;
   icon: ComponentProps<typeof Ionicons>["name"];
   activeIcon: ComponentProps<typeof Ionicons>["name"];
+  isPortal?: boolean;
 };
 
 export const tabs: readonly PrimaryTab[];
