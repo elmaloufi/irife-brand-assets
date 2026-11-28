@@ -99,7 +99,7 @@ export class PasswordRecoveryService {
       const sessionIds = sessions.map((session) => session.id);
       if (sessionIds.length > 0) {
         await tx.session.updateMany({ where: { id: { in: sessionIds }, revokedAt: null }, data: { revokedAt: lockedNow } });
-        await tx.sessionCredential.updateMany({ where: { sessionId: { in: sessionIds }, revokedAt: null }, data: { revokedAt: now } });
+        await tx.sessionCredential.updateMany({ where: { sessionId: { in: sessionIds }, revokedAt: null }, data: { revokedAt: lockedNow } });
       }
     });
     return { reset: true };
