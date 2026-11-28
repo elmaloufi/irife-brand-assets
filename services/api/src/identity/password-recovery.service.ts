@@ -44,7 +44,7 @@ export class PasswordRecoveryService {
         },
         select: { id: true },
       });
-    }, { isolationLevel: 'Serializable' });
+    });
     if (!action) return { accepted: true };
 
     try {
@@ -100,7 +100,7 @@ export class PasswordRecoveryService {
         await tx.session.updateMany({ where: { id: { in: sessionIds }, revokedAt: null }, data: { revokedAt: now } });
         await tx.sessionCredential.updateMany({ where: { sessionId: { in: sessionIds }, revokedAt: null }, data: { revokedAt: now } });
       }
-    }, { isolationLevel: 'Serializable' });
+    });
     return { reset: true };
   }
 }
