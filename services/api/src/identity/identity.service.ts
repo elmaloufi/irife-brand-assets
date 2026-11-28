@@ -150,17 +150,20 @@ export class IdentityService {
     const tokenHash = hashToken(refreshToken);
     const existing = await this.prisma.sessionCredential.findUnique({
       where: { tokenHash },
-      select: { id: true },
+      select: { id: true, sessionId: true },
     });
     if (!existing) {
       throw new UnauthorizedException({ code: 'INVALID_REFRESH_TOKEN', message: 'The refresh token is invalid or expired.' });
     }
 
     const result = await this.prisma.$transaction(async (tx) => {
-      // Serialize all uses of one refresh credential. A retry with the same
-      // request id receives the original encrypted response; a different id
-      // remains a replay and revokes the session family.
+      // Keep the same lock order used by logout and password revocation:
+      // Session first, then its credential. Locking the credential first here
+      // can deadlock against flows that lock the session before its credentials.
+      await tx.$queryRaw`SELECT "id" FROM "Session" WHERE "id" = ${existing.sessionId}::uuid FOR UPDATE`;
       await tx.$queryRaw`SELECT "id" FROM "SessionCredential" WHERE "id" = ${existing.id}::uuid FOR UPDATE`;
+      // A retry with the same request id receives the original encrypted
+      // response; a different id remains a replay and revokes the session.
       const credential = await tx.sessionCredential.findUnique({
         where: { id: existing.id },
         include: { session: { include: { user: true } } },
