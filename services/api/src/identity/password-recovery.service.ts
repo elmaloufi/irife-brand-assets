@@ -21,7 +21,6 @@ export class PasswordRecoveryService {
     // Always return the same response so callers cannot enumerate accounts.
     if (!user || user.status !== 'ACTIVE') return { accepted: true };
 
-    const now = new Date();
     const token = createOpaqueToken();
     const action = await this.prisma.$transaction(async (tx) => {
       // Serialize reset-token issuance per account so concurrent requests cannot leave multiple live tokens.
@@ -31,6 +30,7 @@ export class PasswordRecoveryService {
         select: { status: true },
       });
       if (!currentUser || currentUser.status !== 'ACTIVE') return null;
+      const now = new Date();
       await tx.identityActionToken.updateMany({
         where: { userId: user.id, type: 'PASSWORD_RESET', consumedAt: null },
         data: { consumedAt: now },
@@ -66,8 +66,8 @@ export class PasswordRecoveryService {
       where: { tokenHash: hashToken(token) },
       include: { user: { select: { id: true, status: true } } },
     });
-    const now = new Date();
-    if (!action || action.type !== 'PASSWORD_RESET' || action.consumedAt || action.expiresAt <= now || action.user.status !== 'ACTIVE') {
+    const precheckTime = new Date();
+    if (!action || action.type !== 'PASSWORD_RESET' || action.consumedAt || action.expiresAt <= precheckTime || action.user.status !== 'ACTIVE') {
       throw new BadRequestException({ code: 'INVALID_OR_EXPIRED_RESET_TOKEN', message: 'This password reset link is invalid or has expired. Request a new link.' });
     }
 
@@ -83,9 +83,10 @@ export class PasswordRecoveryService {
       if (!currentUser || currentUser.status !== 'ACTIVE') {
         throw new BadRequestException({ code: 'INVALID_OR_EXPIRED_RESET_TOKEN', message: 'This password reset link is invalid or has expired. Request a new link.' });
       }
+      const lockedNow = new Date();
       const consumed = await tx.identityActionToken.updateMany({
-        where: { id: action.id, consumedAt: null, expiresAt: { gt: now } },
-        data: { consumedAt: now },
+        where: { id: action.id, consumedAt: null, expiresAt: { gt: lockedNow } },
+        data: { consumedAt: lockedNow },
       });
       if (consumed.count !== 1) {
         throw new BadRequestException({ code: 'INVALID_OR_EXPIRED_RESET_TOKEN', message: 'This password reset link is invalid or has expired. Request a new link.' });
@@ -97,7 +98,7 @@ export class PasswordRecoveryService {
       });
       const sessionIds = sessions.map((session) => session.id);
       if (sessionIds.length > 0) {
-        await tx.session.updateMany({ where: { id: { in: sessionIds }, revokedAt: null }, data: { revokedAt: now } });
+        await tx.session.updateMany({ where: { id: { in: sessionIds }, revokedAt: null }, data: { revokedAt: lockedNow } });
         await tx.sessionCredential.updateMany({ where: { sessionId: { in: sessionIds }, revokedAt: null }, data: { revokedAt: now } });
       }
     });
