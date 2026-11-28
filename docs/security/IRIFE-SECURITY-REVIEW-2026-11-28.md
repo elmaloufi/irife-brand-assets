@@ -72,6 +72,15 @@ The API router accepts case-insensitive paths and trailing slashes, while the ra
 
 **Change:** Normalize the path to lowercase, strip the API prefix case-insensitively, and remove trailing slashes before policy lookup. A regression test covers an uppercase path with a trailing slash.
 
+### SEC-012 — Private-response cache headers could be skipped with route variants
+
+**Severity:** Medium privacy-control risk  
+**Status:** Fixed in PR #49; regression tests added, CI verification pending.
+
+The API bootstrap applied `Cache-Control: no-store` using case-sensitive prefix checks, while Express route matching accepts case variants and trailing slashes. A request could therefore reach a private route without receiving the intended cache headers.
+
+**Change:** Private API path classification is centralized and normalizes case and trailing slashes. Tests cover identity, user-owned, and enquiry route variants while preserving public catalogue behavior.
+
 ## Open risks before public release
 
 ### SEC-006 — Rate limiting depends on the effective client IP
