@@ -143,7 +143,8 @@ export class IdentityService {
     return { id: user.id, email: user.email, displayName: user.displayName, role: user.role, sessionId: credential.sessionId };
   }
 
-  async refresh(refreshToken: string, requestId: string): Promise<RefreshTokenResponse> {
+  async refresh(refreshToken: string, requestId?: string): Promise<RefreshTokenResponse> {
+    const effectiveRequestId = requestId ?? randomUUID();
     const tokenHash = hashToken(refreshToken);
     const existing = await this.prisma.sessionCredential.findUnique({
       where: { tokenHash },
@@ -175,7 +176,7 @@ export class IdentityService {
 
       if (credential.consumedAt) {
         if (
-          credential.rotationRequestId === requestId &&
+          credential.rotationRequestId === effectiveRequestId &&
           credential.rotationResponseCiphertext &&
           credential.rotationResponseExpiresAt &&
           credential.rotationResponseExpiresAt > now
@@ -214,7 +215,7 @@ export class IdentityService {
         },
         data: {
           consumedAt: now,
-          rotationRequestId: requestId,
+          rotationRequestId: effectiveRequestId,
           rotationResponseCiphertext: encryptRefreshResponse(response),
           rotationResponseExpiresAt: new Date(now.getTime() + REFRESH_RETRY_WINDOW_MS),
         },
