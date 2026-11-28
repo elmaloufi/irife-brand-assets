@@ -5,9 +5,12 @@ on:
     branches:
       - main
       - 'feat/**'
+      - 'fix/**'
       - 'chore/**'
+      - 'security/**'
   pull_request:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -21,6 +24,7 @@ jobs:
   quality:
     name: Mobile, contracts, and API quality
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     env:
       DATABASE_URL: postgresql://irife:irife_local_dev_only@127.0.0.1:5432/irife?schema=public
 
@@ -43,16 +47,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
-      - name: Setup Node.js
+      - name: Setup Node.js 24
         uses: actions/setup-node@v7
         with:
           node-version: 24
-          package-manager-cache: false
+          cache: npm
+          cache-dependency-path: package-lock.json
 
       - name: Install locked workspace dependencies
         run: npm ci --no-audit --no-fund
 
-      - name: Verify Expo SDK 57 native peer versions
+      - name: Verify Expo native peer dependencies
         run: npm ls react-native-reanimated react-native-worklets expo-modules-core --workspace=@irife/mobile
 
       - name: Validate Prisma schema
@@ -66,3 +71,13 @@ jobs:
 
       - name: Build contracts and API; type-check mobile
         run: npm run build
+
+      - name: Write CI summary
+        if: always()
+        run: |
+          {
+            echo "## IRIFE CI"
+            echo "- Commit: $GITHUB_SHA"
+            echo "- Ref: $GITHUB_REF"
+            echo "- Result: ${{ job.status }}"
+          } >> "$GITHUB_STEP_SUMMARY"

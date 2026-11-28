@@ -7,17 +7,18 @@ services:
       POSTGRES_USER: irife
       POSTGRES_PASSWORD: irife_local_dev_only
       POSTGRES_DB: irife
+      PGDATA: /var/lib/postgresql/18/docker
       POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
-      - irife_postgres_data:/var/lib/postgresql/data
+      - irife_postgres_data_v18:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U irife -d irife"]
       interval: 5s
       timeout: 5s
       retries: 12
-      start_period: 10s
+      start_period: 20s
 
 volumes:
-  irife_postgres_data:
+  irife_postgres_data_v18:
