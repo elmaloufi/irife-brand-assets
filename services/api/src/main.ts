@@ -6,6 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module.js';
+import { isPrivateApiPath } from './common/cache-policy.js';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
@@ -19,11 +20,7 @@ async function bootstrap(): Promise<void> {
     response.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
     response.setHeader('Cross-Origin-Resource-Policy', 'same-site');
     response.setHeader('X-Request-Id', randomUUID());
-    if (
-      request.path.startsWith('/api/v1/identity') ||
-      request.path.startsWith('/api/v1/me/') ||
-      request.path.startsWith('/api/v1/enquiries')
-    ) {
+    if (isPrivateApiPath(request.path)) {
       response.setHeader('Cache-Control', 'no-store, private');
       response.setHeader('Pragma', 'no-cache');
     }
