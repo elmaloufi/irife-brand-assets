@@ -63,6 +63,15 @@ The earlier refresh tests mocked Prisma transactions and therefore could not est
 
 **Acceptance:** The new E2E job must pass on the latest PR head. Review its logs, not only the aggregate green status.
 
+### SEC-011 — Authentication rate-limit route variants
+
+**Severity:** Medium  
+**Status:** Fixed in PR #49; regression test added, CI verification pending.
+
+The API router accepts case-insensitive paths and trailing slashes, while the rate-limit guard originally matched exact lowercase paths. A request using a case or trailing-slash variant could therefore reach an authentication route without matching its configured rate-limit policy.
+
+**Change:** Normalize the path to lowercase, strip the API prefix case-insensitively, and remove trailing slashes before policy lookup. A regression test covers an uppercase path with a trailing slash.
+
 ## Open risks before public release
 
 ### SEC-006 — Rate limiting depends on the effective client IP
