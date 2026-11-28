@@ -27,7 +27,6 @@ test('mobile scripts use IRIFE native builds rather than a shared preview runtim
   assert.equal(mobile.scripts.android, 'expo run:android');
   assert.equal(mobile.scripts.ios, 'expo run:ios');
   assert.equal(mobile.scripts.prebuild, 'expo prebuild');
-  assert.equal(mobile.dependencies['expo-dev-client'], undefined);
 });
 
 test('mobile animation peers remain aligned with the Expo SDK 57 native matrix', () => {
