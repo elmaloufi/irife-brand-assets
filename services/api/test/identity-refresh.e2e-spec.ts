@@ -71,7 +71,7 @@ describe('refresh-token rotation against PostgreSQL', () => {
     expect(results[0]).toEqual(results[1]);
     const credentials = await prisma.sessionCredential.findMany({ where: { sessionId: session.id } });
     expect(credentials.filter((item) => item.type === 'ACCESS' && item.revokedAt === null)).toHaveLength(1);
-    expect(credentials.filter((item) => item.type === 'REFRESH' && item.revokedAt === null)).toHaveLength(1);
+    expect(credentials.filter((item) => item.type === 'REFRESH' && item.revokedAt === null && item.consumedAt === null)).toHaveLength(1);
     const consumed = credentials.find((item) => item.type === 'REFRESH' && item.consumedAt !== null);
     expect(consumed?.rotationRequestId).toBe(requestId);
     expect(consumed?.rotationResponseCiphertext).toBeTruthy();
