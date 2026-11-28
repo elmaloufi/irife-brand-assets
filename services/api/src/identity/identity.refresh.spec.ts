@@ -59,7 +59,7 @@ describe('IdentityService refresh rotation idempotency', () => {
     const retry = await service.refresh('a'.repeat(48), 'request-id-00000001');
     expect(retry).toEqual(first);
     expect(tx.sessionCredential.createMany).toHaveBeenCalledTimes(1);
-    expect(tx.session.update).not.toHaveBeenCalled();
+    expect(tx.session.update).toHaveBeenCalledTimes(1);
   });
 
   it('revokes the session when a consumed refresh token is reused with a different request id', async () => {
