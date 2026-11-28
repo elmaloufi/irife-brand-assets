@@ -35,7 +35,7 @@ function createHarness() {
     },
   };
   const prisma = {
-    sessionCredential: { findUnique: jest.fn().mockResolvedValue({ id: 'credential-1' }) },
+    sessionCredential: { findUnique: jest.fn().mockResolvedValue({ id: 'credential-1', sessionId: 'session-1' }) },
     $transaction: jest.fn(async (callback: (client: typeof tx) => Promise<unknown>) => callback(tx)),
   };
   return { service: new IdentityService(prisma as never), prisma, tx, credential };
@@ -52,6 +52,8 @@ describe('IdentityService refresh rotation idempotency', () => {
     const { service, tx, credential } = createHarness();
 
     const first = await service.refresh('a'.repeat(48), 'request-id-00000001');
+    expect(tx.$queryRaw).toHaveBeenNthCalledWith(1, expect.anything(), 'session-1');
+    expect(tx.$queryRaw).toHaveBeenNthCalledWith(2, expect.anything(), 'credential-1');
     expect(tx.sessionCredential.createMany).toHaveBeenCalledTimes(1);
     expect(credential.rotationRequestId).toBe('request-id-00000001');
     expect(typeof credential.rotationResponseCiphertext).toBe('string');
