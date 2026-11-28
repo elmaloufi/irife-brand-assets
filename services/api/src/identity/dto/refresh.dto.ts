@@ -10,5 +10,5 @@ export class RefreshDto {
   @IsString()
   @MinLength(16)
   @MaxLength(128)
-  requestId!: string;
+  requestId?: string;
 }
