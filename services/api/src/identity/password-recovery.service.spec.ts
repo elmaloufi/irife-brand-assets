@@ -19,6 +19,7 @@ describe('PasswordRecoveryService', () => {
     const tokenUpdate = jest.fn().mockResolvedValue({ count: 0 });
     const tx = {
       $queryRaw: jest.fn().mockResolvedValue([]),
+      user: { findUnique: jest.fn().mockResolvedValue({ status: 'ACTIVE' }) },
       identityActionToken: { updateMany: tokenUpdate, create: tokenCreate },
     };
     const prisma = {
@@ -41,6 +42,7 @@ describe('PasswordRecoveryService', () => {
   it('consumes an undelivered token while keeping the response non-enumerating', async () => {
     const tx = {
       $queryRaw: jest.fn().mockResolvedValue([]),
+      user: { findUnique: jest.fn().mockResolvedValue({ status: 'ACTIVE' }) },
       identityActionToken: {
         updateMany: jest.fn().mockResolvedValue({ count: 0 }),
         create: jest.fn().mockResolvedValue({ id: 'token-1' }),
@@ -70,7 +72,10 @@ describe('PasswordRecoveryService', () => {
     const transactionClient = {
       $queryRaw: jest.fn().mockResolvedValue([]),
       identityActionToken: { updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
-      user: { update: jest.fn().mockResolvedValue({}) },
+      user: {
+        findUnique: jest.fn().mockResolvedValue({ status: 'ACTIVE' }),
+        update: jest.fn().mockResolvedValue({}),
+      },
       session: {
         findMany: jest.fn().mockResolvedValue([{ id: 'session-1' }, { id: 'session-2' }]),
         updateMany: jest.fn().mockResolvedValue({ count: 2 }),
@@ -96,7 +101,10 @@ describe('PasswordRecoveryService', () => {
     const transactionClient = {
       $queryRaw: jest.fn().mockResolvedValue([]),
       identityActionToken: { updateMany: jest.fn().mockResolvedValue({ count: 0 }) },
-      user: { update: jest.fn() },
+      user: {
+        findUnique: jest.fn().mockResolvedValue({ status: 'ACTIVE' }),
+        update: jest.fn(),
+      },
       session: { findMany: jest.fn(), updateMany: jest.fn() },
       sessionCredential: { updateMany: jest.fn() },
     };
