@@ -25,7 +25,7 @@ Payments, payouts, guaranteed live availability, flight and hotel booking, and p
 
 | Area | Stack |
 |---|---|
-| Mobile | Expo, React Native, TypeScript, Expo Router |
+| Mobile | React Native, Expo SDK modules, TypeScript, Expo Router, native Android/iOS builds |
 | API | NestJS, TypeScript, REST |
 | Database | PostgreSQL, Prisma |
 | Shared contracts | TypeScript workspace package |
@@ -35,7 +35,7 @@ Payments, payouts, guaranteed live availability, flight and hotel booking, and p
 ## Repository layout
 
 ```text
-apps/mobile/       Expo mobile application
+apps/mobile/       Native React Native mobile application
 services/api/      NestJS API
 packages/contracts Shared API contracts
 database/prisma/   Prisma schema and migrations
@@ -82,17 +82,23 @@ npm run build
 npm run api:dev
 ```
 
-### Start the mobile app
+### Build and start the native mobile app
 
-In a second terminal:
+Build and install the Android application with the native Android toolchain:
+
+```bash
+npm run android --workspace=@irife/mobile
+```
+
+After a native development build is installed, start Metro for that native app:
 
 ```bash
 npm run start --workspace=@irife/mobile
 ```
 
-For physical Android devices, configure `EXPO_PUBLIC_API_URL` to use the development machine's trusted LAN address. Do not use `localhost` from a physical phone and do not expose the development API publicly.
+The start command explicitly targets a native development build. A native app binary must already be installed. For physical Android devices, configure `EXPO_PUBLIC_API_URL` to use the development machine's trusted LAN address. Do not use `localhost` from a physical phone and do not expose the development API publicly.
 
-See [Mobile setup](apps/mobile/README.md) for device-specific instructions.
+See [Mobile setup](apps/mobile/README.md) for Android and iOS native build requirements.
 
 ## Engineering and security
 

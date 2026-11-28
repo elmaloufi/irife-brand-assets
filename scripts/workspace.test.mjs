@@ -22,6 +22,13 @@ test('API workspace exists and exposes the required lifecycle scripts', () => {
   }
 });
 
+test('mobile scripts use IRIFE native builds rather than a shared preview runtime', () => {
+  assert.equal(mobile.scripts.start, 'expo start --dev-client');
+  assert.equal(mobile.scripts.android, 'expo run:android');
+  assert.equal(mobile.scripts.ios, 'expo run:ios');
+  assert.equal(mobile.scripts.prebuild, 'expo prebuild');
+});
+
 test('mobile animation peers remain aligned with the Expo SDK 57 native matrix', () => {
   assert.equal(mobile.dependencies['react-native-reanimated'], '~4.5.1');
   assert.equal(mobile.dependencies['react-native-worklets'], '~0.10.4');
